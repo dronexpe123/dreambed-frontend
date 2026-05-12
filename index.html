@@ -1,0 +1,4020 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DreamBed Bolivia</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root {
+  --cream: #FAF7F2;
+  --warm-white: #FEFCF9;
+  --teal: #0D5C54;
+  --teal-mid: #147A6F;
+  --teal-light: #1A9E8F;
+  --teal-pale: #E0F4F2;
+  --teal-ultra: #F0FAF9;
+  --amber: #D4822A;
+  --amber-light: #F0A94B;
+  --amber-pale: #FDF0DB;
+  --text: #1A1A1A;
+  --text-muted: #6B7575;
+  --border: #E2E8E6;
+  --border-light: #EEF3F1;
+  --success: #0D5C54;
+  --success-bg: #E0F4F2;
+  --danger: #8B2220;
+  --danger-bg: #FDECEA;
+  --shadow-sm: 0 2px 8px rgba(13,92,84,0.06);
+  --shadow-md: 0 8px 32px rgba(13,92,84,0.10);
+  --shadow-lg: 0 20px 60px rgba(13,92,84,0.14);
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --transition: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.view { display: none; }
+.view.active { display: block; }
+
+/* ========= NAV ========= */
+nav {
+  background: var(--teal);
+  height: 66px;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+}
+
+.nav-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--amber-light);
+  letter-spacing: 0.01em;
+  cursor: pointer;
+}
+.nav-logo span { color: rgba(255,255,255,0.9); font-weight: 400; }
+
+.nav-links { display: flex; gap: 0.35rem; align-items: center; }
+
+.nav-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.75);
+  padding: 0.45rem 0.95rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all var(--transition);
+  letter-spacing: 0.01em;
+}
+.nav-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+.nav-btn.active {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border-bottom: 2px solid var(--amber-light);
+  border-radius: 8px 8px 0 0;
+}
+
+.cart-btn {
+  position: relative;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  padding: 0.45rem 1.1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.cart-btn:hover { background: rgba(255,255,255,0.2); }
+
+.cart-badge {
+  background: var(--amber);
+  color: #fff;
+  border-radius: 50%;
+  width: 18px; height: 18px;
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: pop 0.3s cubic-bezier(0.68,-0.55,0.265,1.55);
+}
+@keyframes pop { 0%{transform:scale(0)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} }
+
+/* ========= PROMO STRIP ========= */
+.promo-strip {
+  background: linear-gradient(90deg, var(--amber) 0%, #E8973A 100%);
+  color: #fff;
+  text-align: center;
+  padding: 0.55rem 3rem;
+  font-size: 0.83rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  position: relative;
+}
+.promo-close {
+  position: absolute;
+  right: 1rem; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  color: rgba(255,255,255,0.8);
+  cursor: pointer; font-size: 1rem;
+  transition: color 0.2s;
+}
+.promo-close:hover { color: #fff; }
+
+/* ========= HERO ========= */
+.hero {
+  background: var(--teal);
+  color: #fff;
+  padding: 5rem 2rem 4rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-bg-pattern {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(26,158,143,0.3) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(212,130,42,0.2) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: var(--amber-light);
+  padding: 0.4rem 1.2rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.hero h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.4rem, 6vw, 3.8rem);
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.hero h1 em {
+  color: var(--amber-light);
+  font-style: normal;
+  display: block;
+}
+
+.hero-sub {
+  color: rgba(255,255,255,0.7);
+  font-size: 1rem;
+  max-width: 500px;
+  margin: 0 auto 2rem;
+  line-height: 1.75;
+}
+
+.hero-pills {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.hero-pill {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.85);
+  padding: 0.45rem 1.1rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.hero-scroll {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  color: rgba(255,255,255,0.4);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+}
+.scroll-line {
+  width: 1px;
+  height: 28px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.4), transparent);
+  animation: scrollDown 2s ease-in-out infinite;
+}
+@keyframes scrollDown {
+  0%,100% { opacity: 0.4; transform: scaleY(1); }
+  50% { opacity: 1; transform: scaleY(1.1); }
+}
+
+/* ========= FILTER BAR ========= */
+.filter-bar {
+  background: var(--warm-white);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 66px;
+  z-index: 90;
+  backdrop-filter: blur(8px);
+}
+
+.filter-scroll-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem 0.6rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.filter-scroll-inner {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+  flex: 1;
+}
+.filter-scroll-inner::-webkit-scrollbar { display: none; }
+
+.filter-scroll-hint {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 48px;
+  background: linear-gradient(to right, transparent, var(--warm-white) 60%);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 0.5rem;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.filter-scroll-hint span {
+  font-size: 1.2rem;
+  color: var(--teal);
+  animation: bounceRight 1.5s ease-in-out infinite;
+  font-weight: 700;
+}
+@keyframes bounceRight {
+  0%, 100% { transform: translateX(0); opacity: 0.5; }
+  50% { transform: translateX(4px); opacity: 1; }
+}
+
+.search-bar-wrap {
+  position: relative;
+  padding: 0.6rem 1.5rem 0.75rem;
+  display: flex;
+  align-items: center;
+}
+.search-bar-wrap .search-icon {
+  position: absolute;
+  left: 2.2rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+.search-bar-wrap .search-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.5rem 1rem 0.5rem 2.4rem;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.85rem;
+  outline: none;
+  background: #fff;
+  color: var(--text);
+  transition: all var(--transition);
+}
+.search-bar-wrap .search-input:focus {
+  border-color: var(--teal-light);
+  box-shadow: 0 0 0 3px rgba(26,158,143,0.1);
+  max-width: 500px;
+}
+.search-bar-wrap .search-input::placeholder { color: var(--text-muted); }
+
+.filter-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.filter-chip {
+  padding: 0.5rem 1.1rem;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.filter-chip:hover {
+  border-color: var(--teal-light);
+  background: var(--teal-ultra);
+  color: var(--teal);
+}
+.filter-chip.active {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(13,92,84,0.25);
+}
+
+/* ========= GRID ========= */
+.grid-wrap {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.sort-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+.result-count {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.result-count strong { color: var(--text); }
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 1.5rem;
+}
+
+/* ========= SKELETON ========= */
+.skeleton-card {
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.skeleton-img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: linear-gradient(90deg, var(--border-light) 25%, #fff 50%, var(--border-light) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+.skeleton-body { padding: 1rem 1.25rem; }
+.skeleton-line {
+  height: 12px;
+  background: linear-gradient(90deg, var(--border-light) 25%, #fff 50%, var(--border-light) 75%);
+  background-size: 200% 100%;
+  border-radius: 6px;
+  animation: shimmer 1.5s infinite;
+  margin-bottom: 0.6rem;
+}
+.skeleton-line.short { width: 60%; }
+.skeleton-line.med { width: 80%; }
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ========= PRODUCT CARD ========= */
+.product-card {
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  transition: all var(--transition);
+  cursor: pointer;
+  position: relative;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--teal-light);
+}
+
+.card-image-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  overflow: hidden;
+  background: var(--teal-ultra);
+}
+
+.card-image-wrap img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: none;
+}
+.product-card:hover .card-image-wrap img { transform: scale(1); }
+
+.card-img-placeholder {
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.5rem;
+  background: var(--teal-ultra);
+  color: var(--teal-pale);
+}
+
+.stock-badge {
+  position: absolute;
+  top: 10px; left: 10px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  backdrop-filter: blur(4px);
+}
+.badge-ok { background: rgba(13,92,84,0.9); color: #fff; }
+.badge-low { background: rgba(180,100,20,0.92); color: #fff; }
+.badge-out { background: rgba(139,34,32,0.9); color: #fff; }
+.badge-infinite { background: rgba(100,60,180,0.92); color: #fff; }
+
+.card-wishlist {
+  position: absolute;
+  top: 10px; right: 10px;
+  width: 32px; height: 32px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  border: none;
+  transition: all 0.2s;
+  opacity: 0;
+  transform: scale(0.8);
+}
+.product-card:hover .card-wishlist { opacity: 1; transform: scale(1); }
+.card-wishlist:hover { background: #fff; transform: scale(1.15) !important; }
+
+.card-body { padding: 1.1rem 1.25rem 1.25rem; }
+
+.card-type {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--teal-light);
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.card-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 0.25rem;
+  color: var(--text);
+}
+
+.card-size { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.8rem; }
+
+.color-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 0.85rem; align-items: center; }
+
+.color-dot {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1.5px rgba(0,0,0,0.12);
+  transition: transform 0.15s, box-shadow 0.15s;
+  cursor: pointer;
+}
+.color-dot:hover { transform: scale(1.25); }
+.color-dot.selected { box-shadow: 0 0 0 2.5px var(--teal); }
+.color-more {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  padding-left: 2px;
+}
+
+.card-footer { display: flex; align-items: center; justify-content: space-between; }
+
+.card-price {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--teal);
+  font-family: 'Cormorant Garamond', serif;
+}
+.card-price small {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-left: 2px;
+}
+
+.btn-add {
+  padding: 0.5rem 1.1rem;
+  background: var(--teal);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.btn-add:hover { background: var(--teal-light); transform: scale(1.03); }
+.btn-add:active { transform: scale(0.97); }
+.btn-add:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+.btn-add.in-cart { background: var(--amber); }
+
+/* ========= EMPTY STATE ========= */
+.empty-state {
+  grid-column: 1/-1;
+  text-align: center;
+  padding: 4rem 1rem;
+  color: var(--text-muted);
+}
+.empty-state .empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
+.empty-state p { font-size: 0.9rem; margin-top: 0.5rem; }
+
+/* ========= CART PANEL ========= */
+.cart-panel {
+  display: none;
+  position: fixed;
+  top: 66px; right: 0;
+  width: 390px;
+  height: calc(100vh - 66px);
+  background: var(--warm-white);
+  border-left: 1px solid var(--border);
+  z-index: 150;
+  overflow-y: auto;
+  box-shadow: -8px 0 40px rgba(13,92,84,0.12);
+  transform: translateX(100%);
+  transition: transform var(--transition);
+}
+.cart-panel.open { display: flex; flex-direction: column; transform: translateX(0); }
+
+.cart-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(13,40,38,0.35);
+  z-index: 149;
+  backdrop-filter: blur(2px);
+}
+.cart-overlay.open { display: block; }
+
+.cart-head {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+.cart-title { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; font-weight: 600; }
+
+.cart-close {
+  background: none; border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.cart-close:hover { background: var(--border-light); color: var(--text); }
+
+.cart-items { flex: 1; overflow-y: auto; padding: 0.75rem 1.25rem; }
+
+.cart-item {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: 0.85rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border-light);
+  align-items: start;
+}
+.cart-item-img {
+  width: 64px; height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--teal-ultra);
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.cart-item-img img { width: 100%; height: 100%; object-fit: cover; }
+.cart-item-name { font-size: 0.88rem; font-weight: 600; margin-bottom: 0.2rem; line-height: 1.3; }
+.cart-item-meta { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+.qty-control {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.qty-btn {
+  width: 24px; height: 24px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.qty-btn:hover { border-color: var(--teal); color: var(--teal); }
+.qty-num { font-size: 0.85rem; font-weight: 600; min-width: 16px; text-align: center; }
+.cart-item-remove {
+  background: none; border: none;
+  cursor: pointer; color: var(--text-muted);
+  font-size: 1rem;
+  transition: color 0.2s;
+  padding: 0 0.2rem;
+}
+.cart-item-remove:hover { color: var(--danger); }
+.cart-item-price { font-size: 0.95rem; font-weight: 700; color: var(--teal); }
+
+.cart-foot {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--warm-white);
+}
+.cart-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.cart-total-label { font-size: 0.82rem; color: var(--text-muted); }
+.cart-total-amount { font-size: 1.3rem; font-weight: 700; color: var(--teal); font-family: 'Cormorant Garamond', serif; }
+
+.cart-empty-msg {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+}
+.cart-empty-msg .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.35; }
+.cart-empty-msg p { font-size: 0.88rem; }
+
+/* ========= MODAL / OVERLAY ========= */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(13,40,38,0.5);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--warm-white);
+  border-radius: var(--r-lg);
+  padding: 0;
+  max-width: 540px;
+  width: 100%;
+  max-height: 92vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ========= STEPPER ========= */
+.stepper {
+  padding: 1.25rem 2rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--warm-white);
+  flex-shrink: 0;
+}
+.step {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+.step-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+.step.active .step-num { border-color: var(--teal); background: var(--teal); color: #fff; }
+.step.done .step-num { border-color: var(--teal); background: var(--teal-pale); color: var(--teal); }
+.step-label { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); }
+.step.active .step-label { color: var(--teal); }
+.step-line { flex: 1; height: 2px; background: var(--border); margin: 0 0.5rem; border-radius: 2px; }
+.step-line.done { background: var(--teal); }
+
+.modal-body { padding: 1.75rem 2rem; overflow-y: auto; flex: 1; }
+.modal-foot { padding: 1.25rem 2rem; border-top: 1px solid var(--border); display: flex; gap: 0.75rem; flex-shrink: 0; }
+
+.modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+.modal-sub { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+
+/* ========= FORM ========= */
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+.form-group { margin-bottom: 1.1rem; }
+.form-group label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.4rem;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.65rem 0.95rem;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+  background: #fff;
+  color: var(--text);
+  transition: all var(--transition);
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--teal-light);
+  box-shadow: 0 0 0 3px rgba(26,158,143,0.1);
+}
+.form-group textarea { resize: vertical; min-height: 72px; }
+
+/* ========= LOCATION CARDS ========= */
+.location-grid { display: grid; gap: 0.6rem; }
+.location-card {
+  padding: 0.85rem 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: #fff;
+}
+.location-card:hover { border-color: var(--teal-light); background: var(--teal-ultra); }
+.location-card.selected { border-color: var(--teal); background: var(--teal-pale); }
+.location-card input[type="radio"] { accent-color: var(--teal); margin-top: 3px; flex-shrink: 0; }
+.location-card-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 2px; }
+.location-name { font-size: 0.88rem; font-weight: 600; margin-bottom: 0.15rem; }
+.location-addr { font-size: 0.77rem; color: var(--text-muted); }
+.location-cost {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.2rem;
+  color: var(--success);
+}
+.location-cost.paid { color: var(--amber); }
+
+/* ========= DAYS TOGGLE ========= */
+.days-row { display: flex; gap: 0.5rem; }
+.days-pill {
+  flex: 1;
+  padding: 0.6rem;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  transition: all var(--transition);
+  color: var(--text-muted);
+}
+.days-pill:hover { border-color: var(--teal-light); }
+.days-pill.selected { background: var(--teal); border-color: var(--teal); color: #fff; }
+
+/* ========= ORDER SUMMARY ========= */
+.order-summary {
+  background: var(--teal-ultra);
+  border: 1px solid var(--teal-pale);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-top: 1.25rem;
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  padding: 0.3rem 0;
+  color: var(--text-muted);
+}
+.summary-row strong { color: var(--text); }
+.summary-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--teal);
+  border-top: 1px solid var(--teal-pale);
+  margin-top: 0.5rem;
+  padding-top: 0.6rem;
+}
+
+/* ========= BUTTONS ========= */
+.btn-primary {
+  flex: 1;
+  padding: 0.8rem;
+  background: var(--teal);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+.btn-primary:hover { background: var(--teal-light); }
+.btn-primary:active { transform: scale(0.98); }
+
+.btn-secondary {
+  padding: 0.8rem 1.25rem;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: all var(--transition);
+}
+.btn-secondary:hover { border-color: var(--text-muted); color: var(--text); }
+
+/* ========= SUCCESS ========= */
+.success-wrap {
+  text-align: center;
+  padding: 1rem 0;
+}
+.success-icon-ring {
+  width: 70px; height: 70px;
+  background: var(--success-bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  font-size: 2rem;
+  animation: successPop 0.5s cubic-bezier(0.68,-0.55,0.265,1.55);
+}
+@keyframes successPop {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.success-title { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+.success-sub { font-size: 0.85rem; color: var(--text-muted); line-height: 1.7; }
+.res-id-tag {
+  display: inline-block;
+  background: var(--teal-pale);
+  color: var(--teal);
+  border-radius: 6px;
+  padding: 0.2rem 0.75rem;
+  font-family: monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 0.75rem 0;
+}
+.telegram-note {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+  font-size: 0.82rem;
+  color: var(--success);
+  font-weight: 600;
+  margin-top: 0.75rem;
+}
+.wa-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  padding: 0.8rem 1.75rem;
+  background: #25D366;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.wa-cta:hover { opacity: 0.9; transform: scale(1.02); }
+
+/* ========= PRODUCT DETAIL ========= */
+.detail-back {
+  padding: 0.75rem 2rem;
+  background: var(--teal);
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.92);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  width: 100%;
+}
+.detail-back:hover { background: var(--teal-light); color: #fff; }
+
+.detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 0 2rem 3rem;
+}
+.detail-main-img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--teal-ultra);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 5rem;
+  margin-bottom: 0.75rem;
+  cursor: default;
+  position: relative;
+}
+.detail-main-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+.detail-main-img:hover img { transform: scale(1); }
+.detail-thumbs { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.detail-thumb {
+  width: 64px; height: 64px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+.detail-thumb.active { border-color: var(--teal); }
+.detail-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.detail-type { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--teal-light); font-weight: 600; margin-bottom: 0.4rem; }
+.detail-name { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 700; line-height: 1.15; margin-bottom: 0.4rem; }
+.detail-code { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.25rem; }
+.detail-price { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 700; color: var(--teal); margin-bottom: 1.5rem; }
+.detail-price span { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.85rem; color: var(--text-muted); font-weight: 400; }
+
+.detail-section { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); font-weight: 600; margin-bottom: 0.6rem; }
+.detail-colors { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.detail-color-dot {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1.5px rgba(0,0,0,0.12);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.detail-color-dot:hover { transform: scale(1.15); }
+.detail-color-dot.selected { box-shadow: 0 0 0 3px var(--teal); }
+.detail-color-name { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.5rem; min-height: 1.2rem; }
+
+.detail-specs {
+  background: var(--teal-ultra);
+  border: 1px solid var(--teal-pale);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+}
+.spec-row { display: flex; justify-content: space-between; padding: 0.35rem 0; border-bottom: 1px solid var(--teal-pale); }
+.spec-row:last-child { border-bottom: none; }
+.spec-row span:first-child { color: var(--text-muted); }
+.spec-row span:last-child { font-weight: 600; }
+
+.detail-btn-add {
+  width: 100%;
+  padding: 1rem;
+  background: var(--teal);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  transition: all var(--transition);
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.01em;
+}
+.detail-btn-add:hover { background: var(--teal-light); }
+.detail-btn-add:disabled { background: #ccc; cursor: not-allowed; }
+
+/* ========= PUBLIC RES VIEW ========= */
+.public-lookup {
+  max-width: 600px;
+  margin: 3rem auto;
+  padding: 0 1.5rem;
+}
+.lookup-title { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; }
+.lookup-sub { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.5rem; }
+
+/* ========= CONTACT ========= */
+.contact-hero {
+  background: var(--teal);
+  color: #fff;
+  text-align: center;
+  padding: 3.5rem 2rem 3rem;
+}
+.contact-hero h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.8rem, 4vw, 2.6rem); margin-bottom: 0.75rem; }
+.contact-hero p { color: rgba(255,255,255,0.7); max-width: 480px; margin: 0 auto; font-size: 0.95rem; line-height: 1.7; }
+.contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; max-width: 1100px; margin: 2.5rem auto; padding: 0 2rem 2rem; }
+.contact-card { background: var(--warm-white); border: 1px solid var(--border); border-radius: var(--r-md); padding: 1.75rem 1.5rem; transition: box-shadow var(--transition); }
+.contact-card:hover { box-shadow: var(--shadow-md); }
+.contact-card-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 1rem; }
+.contact-card h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 600; margin-bottom: 0.4rem; }
+.contact-card p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.65; }
+.wa-contact-btn { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 1.25rem; padding: 0.65rem 1.4rem; background: #25D366; color: #fff; border-radius: 10px; text-decoration: none; font-size: 0.88rem; font-weight: 600; transition: opacity 0.2s; }
+.wa-contact-btn:hover { opacity: 0.88; }
+
+/* ========= ADMIN MOBILE NAV ========= */
+.admin-mobile-nav {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 95;
+  background: var(--teal);
+  padding: 0.4rem 0.25rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.admin-mobile-nav::-webkit-scrollbar { display: none; }
+.admin-mob-btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.4rem 1rem;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: rgba(255,255,255,0.65);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.admin-mob-btn span { font-size: 0.62rem; font-weight: 600; }
+.admin-mob-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.admin-mob-btn.active { background: rgba(255,255,255,0.15); color: #fff; border-bottom: 2px solid var(--amber-light); }
+
+
+/* ========= ADMIN ========= */
+.admin-layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 66px); }
+.admin-sidebar { background: var(--teal); padding: 1.5rem 0; position: sticky; top: 66px; height: calc(100vh - 66px); overflow-y: auto; }
+.sidebar-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: rgba(255,255,255,0.3); padding: 0 1.25rem 0.5rem; font-weight: 700; }
+.sidebar-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 1.25rem; color: rgba(255,255,255,0.65); cursor: pointer; transition: all 0.2s; font-size: 0.87rem; border-left: 3px solid transparent; }
+.sidebar-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.sidebar-item.active { background: rgba(255,255,255,0.12); color: #fff; border-left-color: var(--amber-light); }
+
+.admin-content { padding: 2rem; background: var(--cream); }
+.admin-header { margin-bottom: 1.5rem; }
+.admin-header h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.7rem; margin-bottom: 0.25rem; }
+.admin-header p { font-size: 0.83rem; color: var(--text-muted); }
+
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+.stat-card { background: var(--warm-white); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 1.25rem; }
+.stat-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; font-weight: 600; }
+.stat-value { font-size: 1.7rem; font-weight: 700; color: var(--teal); font-family: 'Cormorant Garamond', serif; }
+.stat-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+.table-card { background: var(--warm-white); border: 1px solid var(--border); border-radius: var(--r-sm); overflow: hidden; margin-bottom: 1.5rem; }
+.table-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.table-header h3 { font-size: 0.95rem; font-weight: 600; }
+table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+th { text-align: left; padding: 0.7rem 1.25rem; background: var(--cream); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); font-weight: 700; border-bottom: 1px solid var(--border); }
+td { padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--teal-ultra); }
+.action-btn { padding: 0.3rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: #fff; cursor: pointer; font-size: 0.77rem; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.2s; margin-right: 0.3rem; }
+.action-btn:hover { border-color: var(--teal); color: var(--teal); }
+.action-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+.btn-add-small { padding: 0.5rem 1rem; background: var(--amber); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.83rem; font-weight: 600; transition: all 0.2s; }
+.btn-add-small:hover { background: var(--teal); }
+.res-status { padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
+.status-pending { background: #FEF3C7; color: #92400E; }
+.status-confirmed { background: var(--success-bg); color: var(--success); }
+.status-expired { background: var(--danger-bg); color: var(--danger); }
+.countdown { font-size: 0.76rem; color: var(--text-muted); }
+.countdown.urgent { color: var(--danger); font-weight: 600; }
+
+/* ========= TOAST ========= */
+.toast {
+  position: fixed;
+  bottom: 2rem; right: 2rem;
+  background: var(--teal);
+  color: #fff;
+  padding: 0.9rem 1.25rem;
+  border-radius: 12px;
+  font-size: 0.86rem;
+  font-weight: 500;
+  transform: translateY(120px);
+  opacity: 0;
+  transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+  z-index: 999;
+  max-width: 300px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.error { background: var(--danger); }
+
+/* ========= CATALOG MODAL ========= */
+.catalog-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(13,40,38,0.6);
+  z-index: 300;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  backdrop-filter: blur(6px);
+}
+.catalog-overlay.open { display: flex; }
+.catalog-box {
+  background: var(--warm-white);
+  border-radius: var(--r-lg);
+  padding: 2rem;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.catalog-box h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+.catalog-box p {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  line-height: 1.65;
+}
+.catalog-options {
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+.catalog-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  background: #fff;
+  transition: all var(--transition);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.catalog-option:hover {
+  border-color: var(--teal-light);
+  background: var(--teal-ultra);
+  color: var(--teal);
+}
+.catalog-progress {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 0;
+  text-align: center;
+}
+.catalog-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.catalog-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--teal), var(--teal-light));
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+.catalog-progress p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ========= FLYER CANVAS ========= */
+#flyerCanvas {
+  display: none;
+  position: fixed;
+  top: -9999px;
+  left: -9999px;
+}
+.flyer-render-box {
+  position: fixed;
+  top: -9999px;
+  left: -9999px;
+  width: 800px;
+  background: #fff;
+  z-index: -1;
+}
+
+/* ========= LOGIN ========= */
+.login-overlay {
+  position: fixed; inset: 0;
+  background: var(--teal);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 500;
+}
+.login-box {
+  background: var(--warm-white);
+  border-radius: var(--r-lg);
+  padding: 2.5rem;
+  width: 100%; max-width: 360px;
+}
+.login-box h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; margin-bottom: 0.25rem; }
+.login-box p { font-size: 0.84rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+
+/* ========= ADMIN FORM ========= */
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.color-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+.color-tag { display: flex; align-items: center; gap: 0.3rem; padding: 0.25rem 0.65rem; background: var(--teal-ultra); border: 1px solid var(--teal-pale); border-radius: 20px; font-size: 0.77rem; font-weight: 500; }
+.color-swatch { width: 12px; height: 12px; border-radius: 50%; }
+.color-tag button { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 0.9rem; }
+.add-color-row { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.5rem; }
+.add-color-row input[type="color"] { width: 40px; height: 36px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; padding: 2px; }
+
+/* ========= MAP ========= */
+.map-container {
+  width: 100%;
+  height: 220px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin-top: 0.75rem;
+  z-index: 1;
+}
+.map-pick-container {
+  width: 100%;
+  height: 300px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid var(--teal-light);
+  margin-top: 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+.map-hint {
+  font-size: 0.77rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+}
+.open-maps-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  padding: 0.45rem 1rem;
+  background: var(--teal-ultra);
+  border: 1px solid var(--teal-pale);
+  border-radius: 8px;
+  color: var(--teal);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.open-maps-btn:hover { background: var(--teal-pale); }
+
+/* ========= HERO CAROUSEL ========= */
+.hero-carousel {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+.hero-carousel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.15) 0%,
+    rgba(0,0,0,0.10) 40%,
+    rgba(0,0,0,0.65) 100%
+  );
+  z-index: 1;
+}
+.hero-carousel-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  z-index: 0;
+}
+.hero-carousel-img.active {
+  opacity: 1;
+}
+.hero-carousel-dots {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 10;
+}
+.hero-carousel-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  transition: all 0.3s;
+  cursor: pointer;
+}
+.hero-carousel-dot.active {
+  background: var(--amber-light);
+  width: 18px;
+  border-radius: 3px;
+}
+
+/* ========= CARD CAROUSEL ========= */
+.card-carousel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.card-carousel-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+  will-change: transform;
+}
+.card-carousel-slide {
+  min-width: 100%;
+  width: 100%;
+  height: 100%;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+.card-carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.card-carousel-dots {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  z-index: 5;
+}
+.card-carousel-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+  transition: all 0.3s;
+}
+.card-carousel-dot.active {
+  background: #fff;
+  width: 12px;
+  border-radius: 2.5px;
+}
+
+/* ========= FOOTER ========= */
+.site-footer { background: var(--teal); color: rgba(255,255,255,0.7); margin-top: 3rem; }
+.footer-inner { display: grid; grid-template-columns: 1.3fr 1fr; gap: 3rem; max-width: 1100px; margin: 0 auto; padding: 3rem 2rem 2rem; }
+.footer-logo { font-family: 'Cormorant Garamond', serif; color: var(--amber-light); font-size: 1.4rem; font-weight: 700; margin-bottom: 0.75rem; }
+.footer-logo span { color: rgba(255,255,255,0.9); font-weight: 400; }
+.footer-brand p { font-size: 0.84rem; line-height: 1.75; max-width: 300px; }
+.footer-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.footer-col h4 { color: rgba(255,255,255,0.5); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 1rem; font-weight: 700; }
+.footer-col a { display: block; color: rgba(255,255,255,0.65); text-decoration: none; font-size: 0.84rem; margin-bottom: 0.6rem; cursor: pointer; transition: color 0.2s; }
+.footer-col a:hover { color: var(--amber-light); }
+.footer-bottom { text-align: center; border-top: 1px solid rgba(255,255,255,0.08); padding: 1.25rem 2rem; font-size: 0.76rem; color: rgba(255,255,255,0.3); max-width: 1100px; margin: 0 auto; }
+
+/* ========= RESPONSIVE ========= */
+@media (max-width: 768px) {
+  .detail-layout { grid-template-columns: 1fr; gap: 1.5rem; padding: 0 1rem 2rem; }
+  .footer-inner { grid-template-columns: 1fr; gap: 2rem; }
+  .contact-grid { padding: 0 1rem 1rem; }
+  .admin-layout { grid-template-columns: 1fr; }
+  .admin-sidebar { display: none; }
+  .form-row { grid-template-columns: 1fr; }
+  .form-row-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .detail-layout { grid-template-columns: 1fr; gap: 1.5rem; padding: 0 1rem 2rem; }
+  .footer-inner { grid-template-columns: 1fr; gap: 2rem; }
+  .contact-grid { padding: 0 1rem 1rem; }
+  .admin-layout { grid-template-columns: 1fr; }
+  .admin-sidebar { display: none; }
+  .form-row { grid-template-columns: 1fr; }
+  .form-row-2 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  /* NAV */
+  nav { padding: 0 0.75rem; height: auto; min-height: 56px; flex-wrap: wrap; gap: 0.4rem; padding-top: 0.5rem; padding-bottom: 0.5rem; }
+  .nav-logo { font-size: 1.2rem; }
+  .nav-links { gap: 0.25rem; flex-wrap: wrap; }
+  .nav-btn { padding: 0.35rem 0.55rem; font-size: 0.72rem; }
+  .cart-btn { padding: 0.35rem 0.7rem; font-size: 0.72rem; }
+
+  /* HERO */
+  .hero { padding: 2.5rem 1rem 2rem; }
+  .hero h1 { font-size: 1.8rem; }
+  .hero-sub { font-size: 0.88rem; }
+  .hero-eyebrow { font-size: 0.68rem; padding: 0.3rem 0.8rem; }
+  .hero-pills { gap: 0.4rem; }
+  .hero-pill { font-size: 0.72rem; padding: 0.35rem 0.75rem; }
+  .hero-scroll { display: none; }
+
+  /* FILTER BAR */
+  .filter-bar { top: 0; }
+  .filter-scroll-wrap { padding: 0.6rem 0.75rem 0.5rem; }
+  .filter-label { display: none; }
+  .filter-chip { padding: 0.42rem 0.9rem; font-size: 0.78rem; flex-shrink: 0; }
+  .search-bar-wrap { padding: 0.5rem 0.75rem 0.6rem; }
+  .search-bar-wrap .search-icon { left: 1.5rem; }
+  .search-bar-wrap .search-input { max-width: 100%; }
+
+  /* GRID */
+  .grid-wrap { padding: 0.75rem; }
+  .products-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+  /* PRODUCT CARD */
+  .card-body { padding: 0.75rem; }
+  .card-name { font-size: 0.92rem; }
+  .card-type { font-size: 0.62rem; }
+  .card-size { font-size: 0.72rem; margin-bottom: 0.5rem; }
+  .card-price { font-size: 1rem; }
+  .btn-add { padding: 0.4rem 0.65rem; font-size: 0.72rem; }
+  .color-dot { width: 13px; height: 13px; }
+  .color-row { gap: 3px; margin-bottom: 0.6rem; }
+  .card-wishlist { display: none; }
+
+  /* CART */
+  .cart-panel { width: 100%; }
+
+  /* MODAL */
+  .modal-overlay { align-items: flex-end; padding: 0; }
+  .modal { border-radius: 20px 20px 0 0; max-height: 92vh; }
+  .modal-body { padding: 1.25rem 1.25rem; }
+  .modal-foot { padding: 1rem 1.25rem; }
+  .stepper { padding: 1rem 1.25rem; }
+  .step-label { font-size: 0.65rem; }
+
+  /* LOCATION CARDS */
+  .location-card { padding: 0.7rem 0.85rem; }
+  .location-name { font-size: 0.82rem; }
+  .location-addr { font-size: 0.72rem; }
+
+  /* MAP */
+  .map-container { height: 180px; }
+
+  /* CONTACT */
+  .contact-hero { padding: 2rem 1rem 1.75rem; }
+  .contact-grid { grid-template-columns: 1fr; padding: 0 0.75rem 1rem; gap: 1rem; }
+
+  /* FOOTER */
+  .footer-inner { padding: 2rem 1rem 1.5rem; gap: 1.5rem; }
+  .footer-links { grid-template-columns: 1fr 1fr; }
+  .footer-bottom { padding: 1rem; font-size: 0.72rem; }
+
+  /* DETAIL */
+  .detail-back { padding: 0.85rem 1rem; }
+  .detail-layout { padding: 0 0.75rem 2rem; gap: 1.25rem; }
+  .detail-name { font-size: 1.5rem; }
+  .detail-price { font-size: 1.7rem; }
+
+  /* ADMIN */
+  .admin-mobile-nav { display: flex; }
+  .admin-layout { grid-template-columns: 1fr; }
+  .admin-sidebar { display: none; }
+  .admin-content { padding: 0.75rem; overflow-x: hidden; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 1rem; }
+  .stat-card { padding: 0.9rem; }
+  .stat-value { font-size: 1.3rem; }
+  .stat-label { font-size: 0.65rem; }
+  .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { font-size: 0.72rem; min-width: 480px; }
+  th, td { padding: 0.5rem 0.65rem; }
+  .action-btn { padding: 0.25rem 0.5rem; font-size: 0.7rem; }
+  .admin-header h2 { font-size: 1.3rem; }
+  .btn-add-small { padding: 0.4rem 0.75rem; font-size: 0.78rem; }
+
+  /* PUBLIC LOOKUP */
+  .public-lookup { margin: 1.5rem auto; padding: 0 1rem; }
+  .lookup-title { font-size: 1.4rem; }
+}
+
+@media (max-width: 380px) {
+  .products-grid { grid-template-columns: 1fr; }
+  .nav-links { gap: 0.15rem; }
+  .nav-btn { padding: 0.3rem 0.4rem; font-size: 0.68rem; }
+}
+
+/* ===== BOTONES GUARDAR / COMPARTIR ===== */
+.product-actions-bar {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem 0;
+  justify-content: flex-end;
+}
+.btn-save, .btn-share {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.32rem 0.75rem;
+  border-radius: 20px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1.5px solid var(--border);
+  background: #fff;
+  color: var(--text-muted);
+}
+.btn-save:hover { border-color: var(--amber); color: var(--amber); background: var(--amber-pale); }
+.btn-save.saved { border-color: var(--amber); color: var(--amber); background: var(--amber-pale); }
+.btn-share:hover { border-color: var(--teal-light); color: var(--teal); background: var(--teal-ultra); }
+
+</style>
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<nav>
+  <div class="nav-logo" id="navLogo" ondblclick="openAdmin()" title="">
+  <img src="https://res.cloudinary.com/dhz8whvie/image/upload/v1778121468/pkxg7wlk4lasaehdkgl7.png" alt="DreamBed Bolivia" style="height:52px;width:auto;object-fit:contain;display:block;">
+</div>
+  <div class="nav-links">
+    <button class="nav-btn active" onclick="showView('store')">Tienda</button>
+    <button class="nav-btn" onclick="showView('contact')">Contacto</button>
+    <button class="nav-btn" onclick="showView('reservations-public')">Mis reservas</button>
+    <button class="nav-btn" onclick="showView('favorites')">❤ Favoritos</button>
+    <button class="cart-btn" onclick="toggleCart()">
+      🛒 Carrito
+      <span class="cart-badge" id="cartBadge" style="display:none">0</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ===== STORE VIEW ===== -->
+<div id="view-store" class="view active">
+
+  <div id="promoBanner" style="display:none">
+    <div class="promo-strip">
+      <span id="promoText"></span>
+      <button onclick="document.getElementById('promoBanner').style.display='none'" class="promo-close">✕</button>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-carousel" id="heroCarousel">
+      <div class="hero-carousel-dots" id="heroCarouselDots"></div>
+    </div>
+    <div class="hero-bg-pattern"></div>
+    <div class="hero-eyebrow">✦ Distribuidores Oficiales Goldsun en Bolivia ✦</div>
+    <h1>Frazadas & Cubrecamas<em>de calidad premium</em></h1>
+    <p class="hero-sub">Reserva online y recoge en tu punto más cercano en La Paz. Entrega rápida y stock garantizado.</p>
+    <div class="hero-pills">
+      <div class="hero-pill">🛡️ Stock garantizado</div>
+      <div class="hero-pill">📍 Múltiples puntos</div>
+      <div class="hero-pill">💬 Atención por WhatsApp</div>
+      <div class="hero-pill">⚡ Reserva en minutos</div>
+    </div>
+    <div class="hero-scroll"><div class="scroll-line"></div></div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-scroll-wrap" id="filterScrollWrap">
+      <div class="filter-scroll-inner">
+        <span class="filter-label">Tipo:</span>
+        <button class="filter-chip active" onclick="filterProducts('all',this)">🛏️ Todos</button>
+        <button class="filter-chip" onclick="filterProducts('frazada',this)">🧣 Frazadas</button>
+        <button class="filter-chip" onclick="filterProducts('cubrecama',this)">🛏️ Cubrecamas</button>
+        <button class="filter-chip" onclick="filterProducts('sabana',this)">📄 Sábanas</button>
+        <button class="filter-chip" onclick="filterProducts('cobertor',this)">🌙 Cobertores</button>
+      </div>
+      <div class="filter-scroll-hint" id="filterHint">
+        <span>›</span>
+      </div>
+    </div>
+    <div class="search-bar-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" type="text" placeholder="Buscar por nombre o código..." oninput="searchProducts(this.value)" id="searchInput">
+    </div>
+  </div>
+
+  <div class="grid-wrap">
+    <div class="sort-row">
+      <div class="result-count" id="resultCount"></div>
+    </div>
+    <div class="products-grid" id="productsGrid">
+      <!-- Skeletons on load -->
+      ${[1,2,3,4].map(() => `
+        <div class="skeleton-card">
+          <div class="skeleton-img"></div>
+          <div class="skeleton-body">
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line med"></div>
+            <div class="skeleton-line short"></div>
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>
+</div>
+
+<!-- ===== FAVORITES VIEW ===== -->
+<div id="view-favorites" class="view">
+  <div class="public-lookup">
+    <h2 class="lookup-title">Mis Favoritos</h2>
+    <p class="lookup-sub">Productos que guardaste para ver después.</p>
+    <div id="favoritesGrid" style="margin-top:1.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem"></div>
+    <div id="favoritesEmpty" style="display:none;text-align:center;padding:3rem 1rem;color:var(--text-muted)">
+      <div style="font-size:2.5rem;margin-bottom:0.75rem;opacity:0.35">♡</div>
+      <p style="font-size:0.88rem">No tienes productos guardados aún.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RESERVATIONS PUBLIC ===== -->
+<div id="view-reservations-public" class="view">
+  <div class="public-lookup">
+    <h2 class="lookup-title">Mis Reservas</h2>
+    <p class="lookup-sub">Ingresa tu número de WhatsApp para ver tus reservas activas.</p>
+    <div style="display:flex;gap:0.75rem">
+      <input type="text" id="lookupPhone" placeholder="Ej: 75844279"
+        style="flex:1;padding:0.65rem 1rem;border:1.5px solid var(--border);border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.9rem;outline:none;color:var(--text);background:#fff"
+        onkeydown="if(event.key==='Enter')lookupReservations()">
+      <button class="btn-primary" style="flex:0;white-space:nowrap;padding:0.65rem 1.25rem" onclick="lookupReservations()">Buscar →</button>
+    </div>
+    <div id="publicResResults" style="margin-top:1.5rem"></div>
+  </div>
+</div>
+
+<!-- ===== ADMIN VIEW ===== -->
+<div id="view-admin" class="view">
+
+  <!-- NAV MÓVIL ADMIN -->
+  <div class="admin-mobile-nav" id="adminMobileNav">
+    <button class="admin-mob-btn active" onclick="adminSection('dashboard',this)">📊<span>Dashboard</span></button>
+    <button class="admin-mob-btn" onclick="adminSection('products',this)">📦<span>Productos</span></button>
+    <button class="admin-mob-btn" onclick="adminSection('reservations',this)">📋<span>Reservas</span></button>
+    <button class="admin-mob-btn" onclick="adminSection('locations',this)">📍<span>Puntos</span></button>
+    <button class="admin-mob-btn" onclick="exportData()">⬇️<span>Exportar</span></button>
+<button class="admin-mob-btn" onclick="openCatalogModal('all')">📄<span>Catálogo</span></button>
+    <button class="admin-mob-btn" onclick="showView('store')">←<span>Tienda</span></button>
+  </div>
+
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div style="margin-bottom:0.5rem">
+        <div class="sidebar-label">Gestión</div>
+        <div class="sidebar-item active" onclick="adminSection('dashboard',this)">📊 Dashboard</div>
+        <div class="sidebar-item" onclick="adminSection('products',this)">📦 Productos</div>
+        <div class="sidebar-item" onclick="adminSection('reservations',this)">📋 Reservas</div>
+        <div class="sidebar-item" onclick="adminSection('locations',this)">📍 Puntos de entrega</div>
+      </div>
+      <div style="margin-top:2rem">
+        <div class="sidebar-label">Sistema</div>
+        <div class="sidebar-item" onclick="exportData()">⬇️ Exportar datos</div>
+<div class="sidebar-item" onclick="openCatalogModal('all')">📄 Catálogo completo</div>
+<div class="sidebar-item" onclick="openCatalogModal('frazada')">📄 Catálogo Frazadas</div>
+<div class="sidebar-item" onclick="openCatalogModal('cubrecama')">📄 Catálogo Cubrecamas</div>
+<div class="sidebar-item" onclick="openCatalogModal('sabana')">📄 Catálogo Sábanas</div>
+<div class="sidebar-item" onclick="openCatalogModal('cobertor')">📄 Catálogo Cobertores</div>
+<div class="sidebar-item" onclick="showView('store')">← Volver a tienda</div>
+      </div>
+    </aside>
+    <main class="admin-content" id="adminContent"></main>
+  </div>
+</div>
+
+<!-- ===== CONTACT VIEW ===== -->
+<div id="view-contact" class="view">
+  <div class="contact-hero">
+    <h2>¿Tienes alguna consulta?</h2>
+    <p>Estamos para ayudarte. Escríbenos directamente o visítanos en nuestros puntos de entrega.</p>
+  </div>
+  <div class="contact-grid">
+    <div class="contact-card">
+      <div class="contact-card-icon" style="background:#25D36618;color:#25D366">💬</div>
+      <h3>WhatsApp</h3>
+      <p>Respuesta rápida. Consulta disponibilidad, precios y coordina tu entrega.</p>
+      <a class="wa-contact-btn" id="contactWaBtn" href="#" target="_blank">Escribir por WhatsApp →</a>
+    </div>
+    <div class="contact-card">
+      <div class="contact-card-icon" style="background:var(--teal-pale);color:var(--teal)">📍</div>
+      <h3>Puntos de entrega</h3>
+      <div id="contactLocations" style="margin-top:0.75rem"></div>
+    </div>
+    <div class="contact-card">
+      <div class="contact-card-icon" style="background:var(--amber-pale);color:var(--amber)">🕐</div>
+      <h3>Horario de atención</h3>
+      <p style="margin-top:0.5rem;line-height:2.1;font-size:0.88rem">
+        <strong>Lun – Vie</strong> · 8:00 AM – 6:00 PM<br>
+        <strong>Sábado</strong> · 8:00 AM – 2:00 PM<br>
+        <span style="color:var(--text-muted);font-size:0.8rem">Domingo y feriados cerrado</span>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PRODUCT DETAIL VIEW ===== -->
+<div id="view-product" class="view">
+  <div class="detail-back" onclick="showView('store')">🏠 ← Volver a la tienda</div>
+  <div class="detail-layout">
+    <div>
+      <div class="detail-main-img" id="detailMainImg">🛏️</div>
+      <div class="detail-thumbs" id="detailGallery"></div>
+    </div>
+    <div>
+      <div style="display:flex;gap:0.5rem;margin-bottom:1rem">
+        <button class="btn-save" id="detailSaveBtn" onclick="toggleSaveProductDetail()">♡ Guardar</button>
+        <button class="btn-share" onclick="shareProduct(selectedProduct?.id||'',selectedProduct?.name||'')">↗ Compartir</button>
+      </div>
+      <div class="detail-type" id="detailType"></div>
+      <div class="detail-name" id="detailName"></div>
+      <div class="detail-code" id="detailCode"></div>
+      <div class="detail-price" id="detailPrice"></div>
+      <div class="detail-section">Colores disponibles</div>
+      <div class="detail-colors" id="detailColors"></div>
+      <div class="detail-color-name" id="detailColorName"></div>
+      <div class="detail-specs" id="detailSpecs"></div>
+      <button class="detail-btn-add" id="detailBtnAdd" onclick="addToCartFromDetail()">+ Agregar al carrito</button>
+      <button class="btn-secondary" style="width:100%;text-align:center" onclick="toggleCart()">
+        🛒 Ver carrito (<span id="detailCartCount">0</span>)
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CART PANEL ===== -->
+<div class="cart-panel" id="cartPanel">
+  <div class="cart-head">
+    <div class="cart-title">Tu carrito</div>
+    <button class="cart-close" onclick="toggleCart()">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-foot" id="cartFoot"></div>
+</div>
+<div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+
+<!-- ===== RESERVE MODAL ===== -->
+<div class="modal-overlay" id="reserveModal">
+  <div class="modal">
+    <div class="stepper" id="modalStepper" style="display:none">
+      <div class="step active" id="stepEl1">
+        <div class="step-num">1</div>
+        <div class="step-label">Tus datos</div>
+      </div>
+      <div class="step-line" id="stepLine1"></div>
+      <div class="step" id="stepEl2">
+        <div class="step-num">2</div>
+        <div class="step-label">Entrega</div>
+      </div>
+      <div class="step-line" id="stepLine2"></div>
+      <div class="step" id="stepEl3">
+        <div class="step-num">3</div>
+        <div class="step-label">Confirmar</div>
+      </div>
+    </div>
+    <div class="modal-body" id="modalContent"></div>
+    <div class="modal-foot" id="modalFoot" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer class="site-footer" id="siteFooter">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo">Dream<span>Bed</span> Bolivia</div>
+      <p>Distribuidores oficiales de frazadas y cubrecamas Goldsun en La Paz, Bolivia. Calidad premium al mejor precio.</p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h4>Tienda</h4>
+        <a onclick="showView('store');filterProducts('all',document.querySelector('.filter-chip'))">Todos los productos</a>
+        <a onclick="showView('store');filterProducts('frazada',document.querySelectorAll('.filter-chip')[1])">Frazadas</a>
+        <a onclick="showView('store');filterProducts('cubrecama',document.querySelectorAll('.filter-chip')[2])">Cubrecamas</a>
+        <a onclick="showView('reservations-public')">Mis reservas</a>
+      </div>
+      <div class="footer-col">
+        <h4>Síguenos</h4>
+        <a id="footerWa" href="#" target="_blank">💬 WhatsApp</a>
+        <a href="https://facebook.com" target="_blank">📘 Facebook</a>
+        <a href="https://instagram.com" target="_blank">📸 Instagram</a>
+        <a href="https://tiktok.com" target="_blank">🎵 TikTok</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">© 2025 DreamBed Bolivia · Todos los derechos reservados</div>
+</footer>
+
+<!-- CATALOG MODAL -->
+<div class="catalog-overlay" id="catalogOverlay">
+  <div class="catalog-box">
+    <h3 id="catalogModalTitle">Generar Catálogo</h3>
+    <p id="catalogModalDesc">Elige qué productos incluir en el PDF</p>
+    <div class="catalog-options" id="catalogOptions"></div>
+    <div class="catalog-progress" id="catalogProgress">
+      <div class="catalog-progress-bar">
+        <div class="catalog-progress-fill" id="catalogProgressFill"></div>
+      </div>
+      <p id="catalogProgressText">Preparando...</p>
+    </div>
+    <div style="display:flex;gap:0.75rem">
+      <button class="btn-secondary" onclick="closeCatalogModal()">Cancelar</button>
+      <button class="btn-primary" id="catalogGenerateBtn" onclick="startCatalogGeneration()">
+        📄 Generar PDF
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="login-overlay" id="loginOverlay" style="display:none">
+  <div class="login-box">
+    <h2>Panel Admin</h2>
+    <p>Ingresa la contraseña para acceder.</p>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" id="adminPwd" placeholder="••••••" onkeydown="if(event.key==='Enter')loginAdmin()">
+    </div>
+    <button class="btn-primary" onclick="loginAdmin()" style="width:100%;justify-content:center">Ingresar</button>
+    <div id="loginError" style="color:var(--danger);font-size:0.82rem;margin-top:0.75rem;display:none">Contraseña incorrecta.</div>
+  </div>
+</div>
+
+<script>
+// ===== CONFIG =====
+const ADMIN_PWD = 'dreambed2024';
+const ADMIN_KEY = 'dreambed-admin-2026-anyet';
+const WA_NUMBER = '59175844279';
+const API = 'https://dreambed-api.onrender.com';
+
+const COLOR_NAMES = {
+  '#2563EB':'Azul','#1D4ED8':'Azul oscuro','#DC2626':'Rojo','#16A34A':'Verde',
+  '#CA8A04':'Dorado','#7C3AED':'Morado','#DB2777':'Rosa','#EA580C':'Naranja',
+  '#0891B2':'Celeste','#374151':'Gris','#111827':'Negro','#F9FAFB':'Blanco',
+  '#92400E':'Café','#065F46':'Verde oscuro','#831843':'Vino','#F59E0B':'Amarillo'
+};
+
+function getDB(k,d){ try{return JSON.parse(localStorage.getItem('dreambed_'+k))||d}catch{return d} }
+function setDB(k,v){ localStorage.setItem('dreambed_'+k,JSON.stringify(v)) }
+
+function initData(){
+  if(!getDB('products',null)){
+    setDB('products',[
+      {id:'p1',code:'2128A-LK',name:'Colección Otoño Invierno',type:'frazada',size:'2 Plazas 210x230cm',
+       price:210,stock:22,colors:[{hex:'#2563EB',name:'Azul'},{hex:'#DC2626',name:'Rojo'},{hex:'#16A34A',name:'Verde'},
+       {hex:'#CA8A04',name:'Dorado'},{hex:'#7C3AED',name:'Morado'},{hex:'#DB2777',name:'Rosa'}],image:'',active:true},
+      {id:'p2',code:'3021',name:'Cobertor 3 Piezas Premium',type:'cobertor',size:'2 Plazas 210x230cm',
+       price:190,stock:1,colors:[{hex:'#1D4ED8',name:'Azul único'}],image:'',active:true}
+    ]);
+  }
+  if(!getDB('locations',null)){
+    setDB('locations',[
+      {id:'l0',name:'Punto Principal',address:'Plaza principal – La Paz',cost:0},
+      {id:'l1',name:'Punto 2',address:'Agregar dirección',cost:0},
+      {id:'l2',name:'Punto 3',address:'Agregar dirección',cost:0},
+    ]);
+  }
+  if(!getDB('reservations',null)) setDB('reservations',[]);
+}
+initData();
+
+let currentFilter='all', currentSearch='', selectedProduct=null, selectedColor=null;
+let selectedLocation=null, selectedDays=7, adminLoggedIn=false;
+let currentAdminSection='dashboard', editingProduct=null, newProductColors=[], existingImages=[];
+let cart=[], currentStep=1;
+
+// ===== VIEWS =====
+function showView(v){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const footer=document.getElementById('siteFooter');
+  if(v==='store'){document.querySelectorAll('.nav-btn')[0].classList.add('active');renderProducts();footer.style.display=''}
+  else if(v==='contact'){document.querySelectorAll('.nav-btn')[1].classList.add('active');renderContactLocations();footer.style.display=''}
+  else if(v==='reservations-public'){document.querySelectorAll('.nav-btn')[2].classList.add('active');footer.style.display=''}
+  else if(v==='favorites'){document.querySelectorAll('.nav-btn')[3].classList.add('active');renderFavorites();footer.style.display=''}
+  else if(v==='admin'){footer.style.display='none'}
+  else if(v==='product'){footer.style.display=''}
+  window.scrollTo(0,0);
+}
+
+// ===== PRODUCTS =====
+function getStockBadge(stock){
+  if(stock===-1) return '<span class="stock-badge badge-infinite">✦ Por encargo</span>';
+  if(stock<=0) return '<span class="stock-badge badge-out">Sin stock</span>';
+  if(stock===1) return '<span class="stock-badge badge-low">¡Último!</span>';
+  if(stock<=3) return `<span class="stock-badge badge-low">Últimos ${stock}</span>`;
+  return '<span class="stock-badge badge-ok">Disponible</span>';
+}
+
+function renderProducts(){
+  fetch(`${API}/api/products`)
+    .then(r=>r.json())
+    .then(p=>{_renderGrid(p);initHeroCarousel(p);})
+    .catch(()=>{const p=getDB('products',[]);_renderGrid(p);initHeroCarousel(p);});
+}
+
+// ===== HERO CAROUSEL =====
+let _heroTimer = null, _heroIndex = 0, _heroImages = [], _heroShuffled = false;
+
+function shuffleArray(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function initHeroCarousel(products){
+  const carousel = document.getElementById('heroCarousel');
+  const dotsEl = document.getElementById('heroCarouselDots');
+  if(!carousel) return;
+
+  // recolectar primera imagen de cada producto
+  const imgs = [];
+  products.forEach(p=>{
+    try{
+      const arr = JSON.parse(p.image||'[]');
+      const url = Array.isArray(arr)?arr[0]:p.image;
+      if(url) imgs.push(url);
+    }catch{ if(p.image) imgs.push(p.image); }
+  });
+
+  if(!imgs.length) return;
+
+  // barajar aleatoriamente
+  _heroImages = shuffleArray(imgs).slice(0, 10);
+  _heroIndex = 0;
+
+  // limpiar imágenes anteriores (mantener dots)
+  carousel.querySelectorAll('.hero-carousel-img').forEach(el=>el.remove());
+
+  // crear slides
+  _heroImages.forEach((url,i)=>{
+    const img = document.createElement('img');
+    img.className = 'hero-carousel-img' + (i===0?' active':'');
+    img.src = url;
+    img.alt = '';
+    carousel.insertBefore(img, dotsEl);
+  });
+
+  // crear dots
+  dotsEl.innerHTML = _heroImages.map((_,i)=>
+    `<div class="hero-carousel-dot ${i===0?'active':''}" onclick="goHeroSlide(${i})"></div>`
+  ).join('');
+
+  // iniciar timer
+  if(_heroTimer) clearInterval(_heroTimer);
+  _heroTimer = setInterval(()=>{
+    _heroIndex = (_heroIndex+1) % _heroImages.length;
+    updateHeroCarousel();
+  }, 4000);
+}
+
+function updateHeroCarousel(){
+  const carousel = document.getElementById('heroCarousel');
+  if(!carousel) return;
+  carousel.querySelectorAll('.hero-carousel-img').forEach((el,i)=>{
+    el.classList.toggle('active', i===_heroIndex);
+  });
+  document.querySelectorAll('.hero-carousel-dot').forEach((el,i)=>{
+    el.classList.toggle('active', i===_heroIndex);
+  });
+}
+
+function goHeroSlide(idx){
+  _heroIndex = idx;
+  updateHeroCarousel();
+  if(_heroTimer) clearInterval(_heroTimer);
+  _heroTimer = setInterval(()=>{
+    _heroIndex = (_heroIndex+1) % _heroImages.length;
+    updateHeroCarousel();
+  }, 4000);
+}
+
+// ===== CARD CAROUSEL =====
+const _cardTimers = {};
+
+function initCardCarousel(productId, images){
+  if(images.length<=1) return;
+  let idx=0;
+  if(_cardTimers[productId]) clearInterval(_cardTimers[productId]);
+  _cardTimers[productId] = setInterval(()=>{
+    idx=(idx+1)%images.length;
+    const track=document.getElementById('track-'+productId);
+    const dots=document.querySelectorAll(`[data-cdot="${productId}"]`);
+    if(track) track.style.transform=`translateX(-${idx*100}%)`;
+    dots.forEach((d,i)=>d.classList.toggle('active',i===idx));
+  }, 3000);
+}
+
+function _renderGrid(products){
+  products=products.filter(p=>p.active===1||p.active===true);
+  const grid=document.getElementById('productsGrid');
+  const count=document.getElementById('resultCount');
+
+  let filtered=products.filter(p=>{
+    const mt=currentFilter==='all'||p.type===currentFilter;
+    const ms=!currentSearch||p.name.toLowerCase().includes(currentSearch.toLowerCase())||(p.code&&p.code.toLowerCase().includes(currentSearch.toLowerCase()));
+    return mt&&ms;
+  });
+
+  count.innerHTML=`<strong>${filtered.length}</strong> producto${filtered.length!==1?'s':''} encontrado${filtered.length!==1?'s':''}`;
+  // limpiar timers anteriores
+  Object.keys(_cardTimers).forEach(id=>{clearInterval(_cardTimers[id]);delete _cardTimers[id];});
+
+  if(!filtered.length){
+    grid.innerHTML=`<div class="empty-state"><div class="empty-icon">🛏️</div><p>No se encontraron productos con ese filtro.</p></div>`;
+    return;
+  }
+
+  const typeLabels={frazada:'Frazada',cubrecama:'Cubrecama',sabana:'Sábana',cobertor:'Cobertor'};
+
+  grid.innerHTML=filtered.map(p=>{
+    const colors=typeof p.colors==='string'?JSON.parse(p.colors||'[]'):(p.colors||[]);
+    const showDots=colors.slice(0,5);
+    const extra=colors.length-5;
+    const inCart=cart.find(i=>i.id===p.id);
+
+    let imgHtml='<div class="card-img-placeholder">🛏️</div>';
+    try{
+      const imgs=JSON.parse(p.image||'[]');
+      const urls=Array.isArray(imgs)?imgs:(p.image?[p.image]:[]);
+      if(urls.length>1){
+        imgHtml=`
+          <div class="card-carousel">
+            <div class="card-carousel-track" id="track-${p.id}">
+              ${urls.map(u=>`<div class="card-carousel-slide"><img src="${u}" alt="${p.name}" loading="lazy"></div>`).join('')}
+            </div>
+            <div class="card-carousel-dots">
+              ${urls.map((_,i)=>`<div class="card-carousel-dot ${i===0?'active':''}" data-cdot="${p.id}"></div>`).join('')}
+            </div>
+          </div>`;
+      } else if(urls.length===1){
+        imgHtml=`<img src="${urls[0]}" alt="${p.name}" loading="lazy">`;
+      }
+    }catch{ if(p.image) imgHtml=`<img src="${p.image}" alt="${p.name}" loading="lazy">`; }
+
+    return `
+    <div class="product-card" onclick="openProductDetail('${p.id}')">
+      <div class="card-image-wrap">
+        ${imgHtml}
+        ${getStockBadge(p.stock)}
+      </div>
+      <div class="product-actions-bar">
+        <button class="btn-save" id="save-${p.id}" onclick="toggleSaveProduct('${p.id}','${p.name}');event.stopPropagation()">♡ Guardar</button>
+        <button class="btn-share" onclick="shareProduct('${p.id}','${p.name}');event.stopPropagation()">↗ Compartir</button>
+      </div>
+      <div class="card-body">
+        <div class="card-type">${typeLabels[p.type]||p.type} · ${p.code||''}</div>
+        <div class="card-name">${p.name}</div>
+        <div class="card-size">${p.size||''}</div>
+        <div class="color-row">
+          ${showDots.map(c=>`<div class="color-dot" style="background:${c.hex||c}" title="${c.name||c}"></div>`).join('')}
+          ${extra>0?`<span class="color-more">+${extra}</span>`:''}
+        </div>
+        <div class="card-footer">
+          <div class="card-price">Bs ${p.price} <small>/unid.</small></div>
+          <button class="btn-add ${inCart?'in-cart':''}" 
+    ${p.stock<=0&&p.stock!==-1?'disabled':''} 
+    onclick="addToCart('${p.id}');event.stopPropagation()">
+    ${p.stock<=0&&p.stock!==-1?'Agotado':inCart?'✓ En carrito':'+ Agregar'}
+          </button>
+        </div>
+      </div>
+    </div>`;
+    }).join('');
+
+  // Restaurar estado de guardados
+  const savedList = getDB('saved_products', []);
+  savedList.forEach(id => {
+    const btn = document.getElementById('save-'+id);
+    if(btn){ btn.textContent = '♥ Guardado'; btn.classList.add('saved'); }
+  });
+
+  // iniciar carruseles de cards
+  filtered.forEach(p=>{
+    try{
+      const imgs=JSON.parse(p.image||'[]');
+      const urls=Array.isArray(imgs)?imgs:(p.image?[p.image]:[]);
+      if(urls.length>1) initCardCarousel(p.id,urls);
+    }catch{}
+  });
+}
+
+function filterProducts(type,btn){
+  currentFilter=type;
+  document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderProducts();
+}
+
+function searchProducts(val){
+  currentSearch=val;
+  renderProducts();
+}
+
+// ===== PRODUCT DETAIL =====
+function openProductDetail(productId){
+  fetch(`${API}/api/products`)
+    .then(r=>r.json())
+    .then(products=>{
+      selectedProduct=products.find(p=>p.id===productId);
+      if(!selectedProduct) return;
+      const colors=typeof selectedProduct.colors==='string'?JSON.parse(selectedProduct.colors||'[]'):(selectedProduct.colors||[]);
+      selectedProduct.colors=colors;
+      selectedColor=colors[0]||null;
+      _renderDetailView(selectedProduct);
+    })
+    .catch(()=>{
+      const products=getDB('products',[]);
+      selectedProduct=products.find(p=>p.id===productId);
+      if(selectedProduct){const c=selectedProduct.colors||[];selectedColor=c[0]||null;_renderDetailView(selectedProduct);}
+    });
+}
+
+function _renderDetailView(p){
+  const typeLabels={frazada:'Frazada con Carnero',cubrecama:'Cubrecama',sabana:'Sábana',cobertor:'Cobertor'};
+
+  let images=[];
+  try{images=JSON.parse(p.image||'[]');if(!Array.isArray(images))images=p.image?[p.image]:[];}
+  catch{images=p.image?[p.image]:[];}
+
+  const imgEl=document.getElementById('detailMainImg');
+  imgEl.innerHTML=images.length?`<img src="${images[0]}" alt="${p.name}" id="mainProdImg">`:' 🛏️';
+
+  const galleryEl=document.getElementById('detailGallery');
+  if(images.length>1){
+    galleryEl.innerHTML=images.map((url,i)=>`
+      <div class="detail-thumb ${i===0?'active':''}" onclick="switchDetailImg('${url}',this)">
+        <img src="${url}" alt="">
+      </div>`).join('');
+  } else { galleryEl.innerHTML=''; }
+
+  document.getElementById('detailType').textContent=typeLabels[p.type]||p.type;
+  document.getElementById('detailName').textContent=p.name;
+  document.getElementById('detailCode').textContent=`Código: ${p.code} · ${p.size}`;
+  document.getElementById('detailPrice').innerHTML=`Bs ${p.price} <span>/unidad</span>`;
+
+  document.getElementById('detailColors').innerHTML=p.colors.map((c,i)=>`
+    <div class="detail-color-dot ${i===0?'selected':''}" style="background:${c.hex}" title="${c.name}"
+      onclick="selectDetailColor(${i},'${c.name}','${c.hex}')"></div>
+  `).join('');
+  document.getElementById('detailColorName').textContent=p.colors[0]?.name||'';
+
+  document.getElementById('detailSpecs').innerHTML=`
+    ${p.description?`<div style="font-size:0.88rem;line-height:1.75;color:var(--text-muted);padding:0.5rem 0 0.85rem;border-bottom:1px solid var(--teal-pale);margin-bottom:0.5rem">${p.description}</div>`:''}
+    <div class="spec-row"><span>Tipo</span><span>${typeLabels[p.type]||p.type}</span></div>
+    <div class="spec-row"><span>Dimensiones</span><span>${p.size}</span></div>
+    <div class="spec-row"><span>Stock disponible</span><span>${p.stock===-1?'Por encargo':p.stock>0?p.stock+' uds.':'Sin stock'}</span></div>
+    <div class="spec-row"><span>Código</span><span>${p.code}</span></div>
+  `;
+
+  const btn=document.getElementById('detailBtnAdd');
+  const inCart=cart.find(i=>i.id===p.id);
+  if(p.stock<=0&&p.stock!==-1){btn.textContent='Sin stock';btn.disabled=true;}
+  else if(inCart){btn.textContent='✓ Ya está en el carrito';btn.disabled=true;}
+  else{btn.textContent='+ Agregar al carrito';btn.disabled=false;}
+
+  document.getElementById('detailCartCount').textContent=cart.length;
+  // Restaurar estado guardado en detalle
+  const savedDetail = getDB('saved_products', []);
+  const detailSaveBtn = document.getElementById('detailSaveBtn');
+  if(detailSaveBtn){
+    if(savedDetail.includes(p.id)){
+      detailSaveBtn.textContent = '♥ Guardado';
+      detailSaveBtn.classList.add('saved');
+    } else {
+      detailSaveBtn.textContent = '♡ Guardar';
+      detailSaveBtn.classList.remove('saved');
+    }
+  }
+  showView('product');
+}
+
+function switchDetailImg(url,el){
+  const main=document.getElementById('mainProdImg');
+  if(main) main.src=url;
+  document.querySelectorAll('.detail-thumb').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function selectDetailColor(idx,name,hex){
+  document.querySelectorAll('.detail-color-dot').forEach((d,i)=>d.classList.toggle('selected',i===idx));
+  document.getElementById('detailColorName').textContent=name;
+  selectedColor={name,hex};
+}
+
+function addToCartFromDetail(){
+  if(!selectedProduct) return;
+  addToCart(selectedProduct.id);
+  const btn=document.getElementById('detailBtnAdd');
+  btn.textContent='✓ Ya está en el carrito';
+  btn.disabled=true;
+  // addToCart hace un fetch async, esperar a que el carrito se actualice
+  setTimeout(()=>{
+    document.getElementById('detailCartCount').textContent=cart.length;
+  }, 800);
+}
+
+// ===== CART =====
+function toggleCart(){
+  const panel=document.getElementById('cartPanel');
+  const overlay=document.getElementById('cartOverlay');
+  const isOpen=panel.classList.contains('open');
+  if(isOpen){panel.classList.remove('open');overlay.classList.remove('open');}
+  else{panel.classList.add('open');overlay.classList.add('open');renderCart();}
+}
+
+function addToCart(productId){
+  fetch(`${API}/api/products`)
+    .then(r=>r.json())
+    .then(products=>{
+      const product=products.find(p=>p.id===productId);
+      if(!product) return;
+      if(cart.find(i=>i.id===productId)){showToast('Ya está en tu carrito');return;}
+      if(product.stock<=0){showToast('Sin stock disponible');return;}
+      const colors=typeof product.colors==='string'?JSON.parse(product.colors||'[]'):(product.colors||[]);
+      cart.push({id:product.id,name:product.name,type:product.type,size:product.size,
+        price:product.price,color:colors[0]||'',colors:colors,quantity:1,maxStock:product.stock,image:product.image||''});
+      updateCartBadge();
+      showToast('✓ Producto agregado al carrito');
+      renderProducts();
+    })
+    .catch(()=>{
+      const products=getDB('products',[]);
+      const product=products.find(p=>p.id===productId);
+      if(!product||cart.find(i=>i.id===productId)){return;}
+      const colors=product.colors||[];
+      cart.push({id:product.id,name:product.name,type:product.type,size:product.size,
+        price:product.price,color:colors[0]||'',colors:colors,quantity:1,maxStock:product.stock,image:''});
+      updateCartBadge();
+      showToast('✓ Producto agregado');
+      renderProducts();
+    });
+}
+
+function removeFromCart(id){
+  cart=cart.filter(i=>i.id!==id);
+  updateCartBadge();
+  renderCart();
+  renderProducts();
+  // si estamos en la vista de detalle del producto eliminado, rehabilitar el botón
+  const btn=document.getElementById('detailBtnAdd');
+  if(btn&&selectedProduct&&selectedProduct.id===id){
+    btn.textContent='+ Agregar al carrito';
+    btn.disabled=false;
+    document.getElementById('detailCartCount').textContent=cart.length;
+  }
+}
+
+function changeQty(id,delta){
+  const item=cart.find(i=>i.id===id);
+  if(!item) return;
+  const nq=item.quantity+delta;
+  if(nq<1){removeFromCart(id);return;}
+  if(nq>item.maxStock){showToast(`Solo hay ${item.maxStock} disponibles`);return;}
+  item.quantity=nq;
+  updateCartBadge();
+  renderCart();
+}
+
+function updateCartBadge(){
+  const b=document.getElementById('cartBadge');
+  if(cart.length>0){b.style.display='inline-flex';b.textContent=cart.length;}
+  else{b.style.display='none';}
+}
+
+function renderCart(){
+  const itemsEl=document.getElementById('cartItems');
+  const footEl=document.getElementById('cartFoot');
+
+  if(cart.length===0){
+    itemsEl.innerHTML=`<div class="cart-empty-msg"><div class="empty-icon">🛒</div><p>Tu carrito está vacío</p></div>`;
+    footEl.innerHTML='';
+    return;
+  }
+
+  const total=cart.reduce((s,i)=>s+i.price*(i.quantity||1),0);
+
+  itemsEl.innerHTML=cart.map(item=>{
+    let imgHtml='<div style="display:flex;align-items:center;justify-content:center;font-size:1.4rem;width:64px;height:64px;background:var(--teal-ultra);border-radius:8px">🛏️</div>';
+    try{
+      const imgs=JSON.parse(item.image||'[]');
+      const url=Array.isArray(imgs)?imgs[0]:item.image;
+      if(url) imgHtml=`<div class="cart-item-img"><img src="${url}" alt="${item.name}"></div>`;
+    }catch{}
+    return `
+    <div class="cart-item">
+      ${imgHtml}
+      <div>
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-meta">${item.size||''} · ${typeof item.color==='object'?item.color.name:'Sin color'}</div>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQty('${item.id}',-1)">−</button>
+          <span class="qty-num">${item.quantity}</span>
+          <button class="qty-btn" onclick="changeQty('${item.id}',1)">+</button>
+          <span style="font-size:0.7rem;color:var(--text-muted);margin-left:2px">(máx.${item.maxStock})</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem">
+        <button class="cart-item-remove" onclick="removeFromCart('${item.id}')">✕</button>
+        <div class="cart-item-price">Bs ${item.price*item.quantity}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  footEl.innerHTML=`
+    <div class="cart-total-row">
+      <div>
+        <div class="cart-total-label">${cart.length} producto${cart.length>1?'s':''}</div>
+      </div>
+      <div class="cart-total-amount">Bs ${total}</div>
+    </div>
+    <button class="btn-primary" style="width:100%;justify-content:center" onclick="proceedToReserve()">
+      Confirmar reserva →
+    </button>
+  `;
+}
+
+// ===== STEPPER MODAL =====
+function updateStepper(step){
+  currentStep=step;
+  for(let i=1;i<=3;i++){
+    const el=document.getElementById('stepEl'+i);
+    el.classList.remove('active','done');
+    if(i<step) el.classList.add('done');
+    else if(i===step) el.classList.add('active');
+  }
+  if(document.getElementById('stepLine1')) document.getElementById('stepLine1').classList.toggle('done',step>1);
+  if(document.getElementById('stepLine2')) document.getElementById('stepLine2').classList.toggle('done',step>2);
+}
+
+function showStep1(){
+  updateStepper(1);
+  document.getElementById('modalStepper').style.display='flex';
+  document.getElementById('modalFoot').style.display='flex';
+  document.getElementById('modalFoot').innerHTML=`
+    <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+    <button class="btn-primary" onclick="goStep2()">Continuar →</button>
+  `;
+  document.getElementById('modalContent').innerHTML=`
+    <div class="modal-title">Tus datos</div>
+    <div class="modal-sub">Necesitamos estos datos para confirmar tu reserva</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nombre completo *</label>
+        <input type="text" id="resName" placeholder="Juan Pérez">
+      </div>
+      <div class="form-group">
+        <label>WhatsApp *</label>
+        <input type="text" id="resPhone" placeholder="75844279">
+      </div>
+    </div>
+    ${selectedProduct&&selectedProduct.colors&&selectedProduct.colors.length>1?`
+    <div class="form-group">
+      <label>Color deseado</label>
+      <select id="resColor">
+        ${selectedProduct.colors.map((c,i)=>`<option value="${i}">${c.name}</option>`).join('')}
+      </select>
+    </div>`:''}
+    <div class="form-group">
+      <label>Nota adicional (opcional)</label>
+      <textarea id="resNote" placeholder="Alguna referencia, diseño específico..."></textarea>
+    </div>
+  `;
+  if(window._resName) document.getElementById('resName').value = window._resName;
+  if(window._resPhone) document.getElementById('resPhone').value = window._resPhone;
+  if(window._resNote) document.getElementById('resNote').value = window._resNote;
+  const colorSel = document.getElementById('resColor');
+  if(colorSel && window._resColorIdx) colorSel.value = window._resColorIdx;
+}
+
+function goStep2(){
+  const name=document.getElementById('resName')?.value.trim();
+  const phone=document.getElementById('resPhone')?.value.trim();
+  if(!name){showToast('Ingresa tu nombre','error');return;}
+  if(!phone||phone.length<7){showToast('Ingresa un WhatsApp válido','error');return;}
+
+  window._resName = name;
+  window._resPhone = phone;
+  window._resNote = document.getElementById('resNote')?.value?.trim() || '';
+  window._resColorIdx = document.getElementById('resColor')?.value || '0';
+
+  fetch(`${API}/api/locations`)
+    .then(r=>r.json())
+    .then(locations=>renderStep2(locations))
+    .catch(()=>renderStep2(getDB('locations',[])));
+}
+
+function renderStep2(locations){
+  updateStepper(2);
+  document.getElementById('modalFoot').innerHTML=`
+    <button class="btn-secondary" onclick="showStep1()">← Atrás</button>
+    <button class="btn-primary" onclick="goStep3()">Continuar →</button>
+  `;
+  document.getElementById('modalContent').innerHTML=`
+    <div class="modal-title">Punto de entrega</div>
+    <div class="modal-sub">Elige dónde quieres recoger tu pedido</div>
+    <div class="location-grid">
+      ${locations.map(l=>`
+        <div class="location-card" id="loc-${l.id}" onclick="pickLocation('${l.id}',${JSON.stringify(l).replace(/"/g,'&quot;')})">
+          <input type="radio" name="location" value="${l.id}">
+          <div class="location-card-icon">📍</div>
+          <div>
+            <div class="location-name">${l.name}</div>
+            <div class="location-addr">${l.address}</div>
+            <div class="location-cost ${l.cost>0?'paid':''}">${l.cost===0?'✓ Sin costo adicional':'+Bs '+l.cost+' delivery'}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div id="step2Map" class="map-container" style="display:none"></div>
+    <div style="margin-top:0.75rem;font-size:0.8rem;color:var(--text-muted)">
+      ¿Fuera de los puntos fijos? <a href="#" onclick="pickCustomLocation();return false" style="color:var(--teal);font-weight:600">Coordinar delivery personalizado</a>
+    </div>
+    <div class="form-group" style="margin-top:1.25rem">
+      <label>Días de reserva</label>
+      <div class="days-row">
+        <div class="days-pill" onclick="setDays(5,this)">5 días</div>
+        <div class="days-pill selected" onclick="setDays(7,this)">7 días</div>
+      </div>
+      <div style="font-size:0.77rem;color:var(--text-muted);margin-top:0.4rem">Plazo para pagar o recoger el producto.</div>
+    </div>
+  `;
+}
+
+let _step2Map = null, _step2Marker = null;
+
+function pickLocation(id, locObj){
+  selectedLocation = typeof locObj === 'string' ? JSON.parse(locObj.replace(/&quot;/g, '"')) : locObj;
+  document.querySelectorAll('.location-card').forEach(el=>el.classList.remove('selected'));
+  const el=document.getElementById('loc-'+id);
+  if(el){el.classList.add('selected');el.querySelector('input[type="radio"]').checked=true;}
+
+  const mapEl = document.getElementById('step2Map');
+  if(!mapEl) return;
+
+  if(selectedLocation.lat && selectedLocation.lng){
+    mapEl.style.display='block';
+    setTimeout(()=>{
+      if(_step2Map){ _step2Map.remove(); _step2Map=null; }
+      delete L.Icon.Default.prototype._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    });
+      _step2Map = L.map('step2Map').setView([selectedLocation.lat, selectedLocation.lng], 16);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(_step2Map);
+      _step2Marker = L.marker([selectedLocation.lat, selectedLocation.lng])
+        .addTo(_step2Map)
+        .bindPopup(selectedLocation.name).openPopup();
+    }, 100);
+
+    // botón abrir en Google Maps
+    const existing = document.getElementById('openMapsBtn');
+    if(existing) existing.remove();
+    const btn = document.createElement('a');
+    btn.id = 'openMapsBtn';
+    btn.className = 'open-maps-btn';
+    btn.href = `https://www.google.com/maps?q=${selectedLocation.lat},${selectedLocation.lng}`;
+    btn.target = '_blank';
+    btn.innerHTML = '🗺️ Abrir en Google Maps';
+    mapEl.insertAdjacentElement('afterend', btn);
+  } else {
+    mapEl.style.display='none';
+    const existing = document.getElementById('openMapsBtn');
+    if(existing) existing.remove();
+  }
+}
+
+function pickCustomLocation(){
+  const custom=prompt('Ingresa tu dirección o punto de referencia:');
+  if(!custom) return;
+  selectedLocation={id:'custom',name:'Delivery personalizado',address:custom,cost:null};
+  document.querySelectorAll('.location-card').forEach(el=>el.classList.remove('selected'));
+  showToast('Delivery: coordinaremos el costo por WhatsApp');
+}
+
+function setDays(d,btn){
+  selectedDays=d;
+  document.querySelectorAll('.days-pill').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function goStep3(){
+  if(!selectedLocation){showToast('Selecciona un punto de entrega','error');return;}
+  updateStepper(3);
+  fetch(`${API}/api/config`)
+    .then(r=>r.json())
+    .then(cfg=>{
+      const discount=cfg.discount||getDB('discount',{active:false,amount:10,min:2});
+      setDB('discount',discount);
+      _renderStep3(discount);
+    })
+    .catch(()=>_renderStep3(getDB('discount',{active:false,amount:10,min:2})));
+}
+
+function _renderStep3(discount){
+  const items=cart.length>0?cart:[{name:selectedProduct?.name||'Producto',price:selectedProduct?.price||0,quantity:1}];
+  const total=items.reduce((s,i)=>s+i.price*(i.quantity||1),0);
+  const totalItems=items.reduce((s,i)=>s+(i.quantity||1),0);
+  const discountAmt=(discount.active&&totalItems>=discount.min)?discount.amount:0;
+  const deliveryCost=selectedLocation.cost;
+  const totalFinal=deliveryCost===null?total-discountAmt:total+(deliveryCost||0)-discountAmt;
+
+  document.getElementById('modalFoot').innerHTML=`
+    <button class="btn-secondary" onclick="goStep2BackFromStep3()">← Atrás</button>
+    <button class="btn-primary" onclick="submitReservation()">✓ Confirmar reserva</button>
+  `;
+  document.getElementById('modalContent').innerHTML=`
+    <div class="modal-title">Confirmar reserva</div>
+    <div class="modal-sub">Revisa los detalles antes de confirmar</div>
+    <div class="order-summary">
+      ${items.map(i=>`
+        <div class="summary-row">
+          <span>${i.name}${i.quantity>1?' x'+i.quantity:''}</span>
+          <strong>Bs ${i.price*(i.quantity||1)}</strong>
+        </div>`).join('')}
+      <div class="summary-row">
+        <span>Punto de entrega</span>
+        <strong>${selectedLocation.name}</strong>
+      </div>
+      <div class="summary-row">
+        <span>Delivery</span>
+        <strong>${deliveryCost===null?'A coordinar':deliveryCost===0?'Gratis':'Bs '+deliveryCost}</strong>
+      </div>
+      ${discountAmt>0?`
+      <div class="summary-row" style="color:var(--success)">
+        <span>🏷️ Descuento (${totalItems} productos)</span>
+        <strong style="color:var(--success)">− Bs ${discountAmt}</strong>
+      </div>`:''}
+      <div class="summary-row">
+        <span>Plazo de reserva</span>
+        <strong>${selectedDays} días</strong>
+      </div>
+      <div class="summary-total">
+        <span>Total estimado</span>
+        <span>${deliveryCost===null?'Bs '+total+' + delivery':'Bs '+totalFinal}</span>
+      </div>
+    </div>
+    <div style="margin-top:1rem;padding:0.85rem 1rem;background:var(--teal-ultra);border-radius:10px;font-size:0.82rem;color:var(--text-muted);line-height:1.6">
+      📲 Recibirás confirmación por WhatsApp y el vendedor será notificado automáticamente.
+    </div>
+  `;
+}
+
+function goStep2BackFromStep3(){
+  fetch(`${API}/api/locations`)
+    .then(r=>r.json())
+    .then(l=>renderStep2(l))
+    .catch(()=>renderStep2(getDB('locations',[])));
+}
+
+function proceedToReserve(){
+  if(cart.length===0) return;
+  toggleCart();
+  selectedDays=7;
+  selectedLocation=null;
+  document.getElementById('reserveModal').classList.add('open');
+  showStep1();
+}
+
+function openReserve(productId){
+  fetch(`${API}/api/products`)
+    .then(r=>r.json())
+    .then(products=>{
+      selectedProduct=products.find(p=>p.id===productId);
+      if(!selectedProduct) return;
+      const colors=typeof selectedProduct.colors==='string'?JSON.parse(selectedProduct.colors||'[]'):(selectedProduct.colors||[]);
+      selectedProduct.colors=colors;
+      selectedColor=colors[0]||null;
+      selectedLocation=null;
+      selectedDays=7;
+      document.getElementById('reserveModal').classList.add('open');
+      showStep1();
+    });
+}
+
+function submitReservation(){
+  const name = window._resName || '';
+  const phone = window._resPhone || '';
+  const note = window._resNote || '';
+  const colorIdx = parseInt(window._resColorIdx || '0');
+  if(!name||!phone){showToast('Completa tus datos en el paso 1','error');return;}
+  if(!selectedLocation){showToast('Selecciona un punto de entrega','error');return;}
+
+  const now=Date.now();
+  const expiresAt=new Date(now+selectedDays*86400000).toISOString();
+  const resolvedColor = (selectedProduct?.colors?.[colorIdx]) || selectedColor || 'Sin especificar';
+  const items=cart.length>0?cart:[{id:selectedProduct?.id,name:selectedProduct?.name,price:selectedProduct?.price,color:resolvedColor,quantity:1}];
+
+  const payload={
+    client_name:name,client_phone:phone,location:selectedLocation.name,
+    days:selectedDays,note:note,
+    items:items.map(item=>({product_id:item.id,color:typeof item.color==='object'?item.color.name:(item.color||'Sin especificar'),quantity:item.quantity||1}))
+  };
+
+  document.getElementById('modalFoot').innerHTML=`<button class="btn-primary" style="width:100%;justify-content:center" disabled>⏳ Procesando...</button>`;
+
+  fetch(`${API}/api/reservations/batch`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(r=>r.json())
+    .then(data=>{
+      if(!data.ok){showToast('Error: '+(data.error||'intenta de nuevo'),'error');return;}
+      cart=[];
+      updateCartBadge();
+      renderSuccessPanel({ids:data.reservation_ids,clientName:name,location:selectedLocation.name,days:selectedDays,expiresAt:data.expires_at,items});
+    })
+    .catch(()=>showToast('Error de conexión. Intenta de nuevo.','error'));
+}
+
+function renderSuccessPanel(res){
+  const expiresDate=new Date(res.expiresAt).toLocaleDateString('es-BO',{day:'numeric',month:'long',year:'numeric'});
+  const total=res.items.reduce((s,i)=>s+(i.price||0)*(i.quantity||1),0);
+  document.getElementById('modalStepper').style.display='none';
+  document.getElementById('modalFoot').style.display='none';
+  document.getElementById('modalContent').innerHTML=`
+    <div class="success-wrap">
+      <div class="success-icon-ring">✓</div>
+      <div class="success-title">¡Reserva confirmada!</div>
+      <div style="display:flex;flex-wrap:wrap;gap:0.4rem;justify-content:center;margin:0.5rem 0">
+        ${res.ids.map(id=>`<span class="res-id-tag">${id}</span>`).join('')}
+      </div>
+      <div class="success-sub">
+        Válida por <strong>${res.days} días</strong>, hasta el <strong>${expiresDate}</strong>.<br>
+        Punto de entrega: <strong>${res.location}</strong>
+      </div>
+      <div class="order-summary" style="margin-top:1rem;text-align:left">
+        ${res.items.map(i=>`<div class="summary-row"><span>${i.name}</span><strong>Bs ${i.price}</strong></div>`).join('')}
+        <div class="summary-total"><span>Total</span><span>Bs ${total}</span></div>
+      </div>
+      <div class="telegram-note">✅ El vendedor fue notificado automáticamente</div>
+      <button class="btn-secondary" style="margin-top:1.25rem;width:100%" onclick="closeModal();showView('store')">Volver a la tienda</button>
+    </div>
+  `;
+}
+
+function closeModal(){
+  document.getElementById('reserveModal').classList.remove('open');
+  document.getElementById('modalStepper').style.display='none';
+  document.getElementById('modalFoot').style.display='none';
+  currentStep=1;
+}
+
+document.getElementById('reserveModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// ===== PUBLIC LOOKUP =====
+function lookupReservations(){
+  const phone=document.getElementById('lookupPhone').value.trim();
+  if(!phone){document.getElementById('publicResResults').innerHTML='';return;}
+  const el=document.getElementById('publicResResults');
+  el.innerHTML='<p style="color:var(--text-muted);font-size:0.88rem">Buscando...</p>';
+  fetch(`${API}/api/reservations/lookup?phone=${phone}`)
+    .then(r=>r.json())
+    .then(reservations=>{
+      if(!reservations.length){el.innerHTML='<p style="color:var(--text-muted);font-size:0.88rem">No se encontraron reservas para ese número.</p>';return;}
+      el.innerHTML=reservations.map(r=>{
+        const exp=new Date(r.expires_at),now=Date.now();
+        const left=exp-now,daysLeft=Math.ceil(left/86400000),isExpired=left<=0;
+        return `
+        <div style="background:var(--warm-white);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+            <strong style="font-family:monospace;font-size:0.9rem">${r.id}</strong>
+            <span class="res-status ${isExpired?'status-expired':'status-pending'}">${isExpired?'Expirada':'Activa'}</span>
+          </div>
+          <div style="font-size:0.83rem;color:var(--text-muted);line-height:2">
+            <div><b style="color:var(--text)">Producto:</b> ${r.product_name}</div>
+            <div><b style="color:var(--text)">Color:</b> ${r.color}</div>
+            <div><b style="color:var(--text)">Punto:</b> ${r.location}</div>
+            <div><b style="color:var(--text)">Vence:</b> ${exp.toLocaleDateString('es-BO')} ${!isExpired?`<span class="${daysLeft<=2?'countdown urgent':'countdown'}">(${daysLeft}d restantes)</span>`:''}</div>
+          </div>
+        </div>`;
+      }).join('');
+    });
+}
+
+// ===== ADMIN =====
+function openAdmin(){
+  if(adminLoggedIn){showView('admin');adminSection('dashboard',document.querySelector('.sidebar-item.active'));return;}
+  document.getElementById('loginOverlay').style.display='flex';
+}
+function loginAdmin(){
+  const pwd=document.getElementById('adminPwd').value;
+  if(pwd===ADMIN_PWD){adminLoggedIn=true;document.getElementById('loginOverlay').style.display='none';showView('admin');adminSection('dashboard',null);}
+  else{document.getElementById('loginError').style.display='block';}
+}
+function adminSection(section,btn){
+  currentAdminSection=section;
+  document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+  document.querySelectorAll('.admin-mob-btn').forEach(i=>i.classList.remove('active'));
+  if(btn) btn.classList.add('active');  
+  const content=document.getElementById('adminContent');
+  if(section==='dashboard') renderDashboard(content);
+  else if(section==='products') renderAdminProducts(content);
+  else if(section==='reservations') renderAdminReservations(content);
+  else if(section==='locations') renderAdminLocations(content);
+}
+
+function renderDashboard(el){
+  el.innerHTML='<div style="padding:2rem;color:var(--text-muted)">Cargando...</div>';
+  Promise.all([
+    fetch(`${API}/api/products`).then(r=>r.json()),
+    fetch(`${API}/api/reservations`).then(r=>r.json()),
+    fetch(`${API}/api/config`).then(r=>r.json()).catch(()=>({}))
+  ]).then(([products,reservations,cfg])=>{
+    const now=Date.now();
+    const active=reservations.filter(r=>r.status==='pending'&&new Date(r.expires_at)>now);
+    const expired=reservations.filter(r=>new Date(r.expires_at)<=now);
+    const totalStock=products.reduce((s,p)=>s+p.stock,0);
+    const promo=getDB('promo',{active:false,text:''});
+    const cfg_discount=cfg.discount||getDB('discount',{active:false,amount:10,min:2});
+    el.innerHTML=`
+      <div class="admin-header"><h2>Dashboard</h2><p>Resumen general del negocio</p></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Productos activos</div><div class="stat-value">${products.filter(p=>p.active).length}</div><div class="stat-sub">${products.length} total</div></div>
+        <div class="stat-card"><div class="stat-label">Stock total</div><div class="stat-value">${totalStock}</div><div class="stat-sub">unidades</div></div>
+        <div class="stat-card"><div class="stat-label">Reservas activas</div><div class="stat-value" style="color:var(--amber)">${active.length}</div><div class="stat-sub">pendientes</div></div>
+        <div class="stat-card"><div class="stat-label">Total reservas</div><div class="stat-value">${reservations.length}</div><div class="stat-sub">${expired.length} expiradas</div></div>
+      </div>
+      <div style="background:var(--warm-white);border:1px solid var(--border);border-radius:var(--r-sm);padding:1.5rem;margin-bottom:1.5rem">
+        <div style="font-size:0.95rem;font-weight:600;margin-bottom:1rem">🏷️ Descuento por cantidad</div>
+        <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+          <div class="form-group" style="margin:0;flex:1;min-width:140px">
+            <label>Descuento (Bs)</label>
+            <input type="number" id="discountAmount" min="0" value="${cfg_discount.amount||10}" style="width:100%;padding:0.5rem 0.75rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.9rem">
+          </div>
+          <div class="form-group" style="margin:0;flex:1;min-width:140px">
+            <label>Mínimo de productos</label>
+            <input type="number" id="discountMin" min="2" value="${cfg_discount.min||2}" style="width:100%;padding:0.5rem 0.75rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.9rem">
+          </div>
+          <div style="display:flex;gap:0.75rem;align-items:center;margin-top:1rem">
+            <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;cursor:pointer">
+              <input type="checkbox" id="discountActive" ${cfg_discount.active?'checked':''} style="accent-color:var(--teal)"> Activar descuento
+            </label>
+            <button class="btn-add-small" onclick="saveDiscount()">Guardar</button>
+          </div>
+        </div>
+      </div>
+        <div style="font-size:0.95rem;font-weight:600;margin-bottom:1rem">🎯 Banner de promoción</div>
+        <div class="form-group" style="margin-bottom:0.75rem">
+          <label>Texto del banner</label>
+          <input type="text" id="promoInput" value="${promo.text||''}" placeholder="Ej: 🎉 Oferta especial esta semana">
+        </div>
+        <div style="display:flex;gap:0.75rem;align-items:center">
+          <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;cursor:pointer">
+            <input type="checkbox" id="promoActive" ${promo.active?'checked':''} style="accent-color:var(--teal)"> Mostrar banner
+          </label>
+          <button class="btn-add-small" onclick="savePromo()">Guardar</button>
+        </div>
+      </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><h3>Reservas recientes</h3></div>
+        ${active.length?`
+        <table>
+          <thead><tr><th>ID</th><th>Producto</th><th>Cliente</th><th>Punto</th><th>Vence</th><th>Estado</th></tr></thead>
+          <tbody>
+          ${active.slice(-5).reverse().map(r=>{
+            const daysLeft=Math.ceil((new Date(r.expires_at)-now)/86400000);
+            return `<tr>
+              <td style="font-family:monospace;font-size:0.76rem">${r.id}</td>
+              <td>${r.product_name}<br><span style="font-size:0.73rem;color:var(--text-muted)">${r.color}</span></td>
+              <td>${r.client_name}<br><span style="font-size:0.73rem;color:var(--text-muted)">${r.client_phone}</span></td>
+              <td style="font-size:0.8rem">${r.location}</td>
+              <td><span class="${daysLeft<=2?'countdown urgent':'countdown'}">${daysLeft}d</span></td>
+              <td><span class="res-status status-pending">Activa</span></td>
+            </tr>`;
+          }).join('')}
+          </tbody>
+        </table>`:'<div style="padding:2rem;text-align:center;color:var(--text-muted);font-size:0.88rem">No hay reservas activas.</div>'}
+      </div>`;
+  });
+}
+
+function saveDiscount(){
+  const amount = parseInt(document.getElementById('discountAmount').value)||10;
+  const min = parseInt(document.getElementById('discountMin').value)||2;
+  const active = document.getElementById('discountActive').checked;
+  fetch(`${API}/api/config`,{
+    method:'PUT',
+    headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},
+    body:JSON.stringify({discount:{amount,min,active}})
+  }).then(()=>{
+    setDB('discount',{amount,min,active});
+    showToast('Descuento actualizado');
+  }).catch(()=>showToast('Error al guardar','error'));
+}
+
+function savePromo(){
+  const text=document.getElementById('promoInput').value.trim();
+  const active=document.getElementById('promoActive').checked;
+  setDB('promo',{text,active});
+  loadPromoBanner();
+  showToast('Banner actualizado');
+}
+
+function renderAdminProducts(el){
+  fetch(`${API}/api/products`,{headers:{'X-Admin-Key':ADMIN_KEY}}).then(r=>r.json()).then(products=>{
+    el.innerHTML=`
+      <div class="admin-header" style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div><h2>Productos</h2><p>Gestiona tu catálogo</p></div>
+        <button class="btn-add-small" onclick="openProductForm()">+ Agregar</button>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Código</th><th>Nombre</th><th>Tipo</th><th>Precio</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody>
+          ${products.map(p=>`
+            <tr>
+              <td style="font-family:monospace;font-size:0.78rem">${p.code||''}</td>
+              <td>${p.name}<br><span style="font-size:0.73rem;color:var(--text-muted)">${p.size||''}</span></td>
+              <td style="text-transform:capitalize">${p.type}</td>
+              <td>Bs ${p.price}</td>
+              <td>${p.stock}</td>
+              <td><span style="font-size:0.76rem;color:${p.active?'var(--success)':'var(--text-muted)'}">${p.active?'Activo':'Oculto'}</span></td>
+              <td>
+                <button class="action-btn" onclick="openProductForm('${p.id}')">Editar</button>
+<button class="action-btn" style="color:#7C3AED;border-color:#7C3AED" onclick="generateFlyer('${p.id}')">🖼️ Flyer</button>
+${p.stock!==-1?`<button class="action-btn" style="color:var(--teal-light);border-color:var(--teal-light)" onclick="setInfiniteStock('${p.id}')">∞ Por encargo</button>`:`<button class="action-btn" style="color:var(--amber);border-color:var(--amber)" onclick="removeInfiniteStock('${p.id}')">∞ Quitar encargo</button>`}
+                ${p.active
+                  ? `<button class="action-btn danger" onclick="deleteProductAPI('${p.id}')">Ocultar</button>`
+                  : `<button class="action-btn" onclick="reactivateProductAPI('${p.id}')" style="color:var(--success);border-color:var(--success)">Reactivar</button>
+                     <button class="action-btn danger" onclick="deleteProductAPI('${p.id}',true)">Eliminar</button>`
+                }
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  });
+}
+
+function renderAdminReservations(el){
+  fetch(`${API}/api/reservations`).then(r=>r.json()).then(reservations=>{
+    const now=Date.now();
+    el.innerHTML=`
+      <div class="admin-header"><h2>Reservas</h2><p>Todas las reservas del sistema</p></div>
+      <div class="table-card">
+        ${reservations.length?`
+        <table>
+          <thead><tr><th>ID</th><th>Producto</th><th>Cliente</th><th>Punto</th><th>Total</th><th>Vence</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+          ${reservations.map(r=>{
+            const exp=new Date(r.expires_at),isExpired=exp<=now,daysLeft=Math.ceil((exp-now)/86400000);
+            return `<tr>
+              <td style="font-family:monospace;font-size:0.73rem">${r.id}</td>
+              <td><b style="font-size:0.83rem">${r.product_name}</b><br><span style="font-size:0.73rem;color:var(--text-muted)">${r.color}</span></td>
+              <td>${r.client_name}<br><a href="https://wa.me/591${r.client_phone}" target="_blank" style="font-size:0.73rem;color:var(--teal)">${r.client_phone}</a></td>
+              <td style="font-size:0.8rem">${r.location}</td>
+              <td>Bs ${r.price}</td>
+              <td>${exp.toLocaleDateString('es-BO')}<br><span class="${!isExpired&&daysLeft<=2?'countdown urgent':'countdown'}">${isExpired?'Expirada':daysLeft+'d'}</span></td>
+              <td><span class="res-status ${isExpired?'status-expired':r.status==='confirmed'?'status-confirmed':'status-pending'}">${isExpired?'Expirada':r.status==='confirmed'?'Confirmada':'Pendiente'}</span></td>
+              <td>
+                ${!isExpired&&r.status==='pending'?`<button class="action-btn" onclick="confirmReservationAPI('${r.id}')">✓</button>`:''}
+                <button class="action-btn danger" onclick="deleteReservationAPI('${r.id}')">✕</button>
+              </td>
+            </tr>`;
+          }).join('')}
+          </tbody>
+        </table>`:'<div style="padding:2rem;text-align:center;color:var(--text-muted);font-size:0.88rem">No hay reservas aún.</div>'}
+      </div>`;
+  });
+}
+
+function renderAdminLocations(el){
+  fetch(`${API}/api/locations`).then(r=>r.json()).then(locations=>{
+    el.innerHTML=`
+      <div class="admin-header" style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div><h2>Puntos de entrega</h2><p>Configura tus puntos de recojo</p></div>
+        <button class="btn-add-small" onclick="addLocationAPI()">+ Agregar</button>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>#</th><th>Nombre</th><th>Dirección</th><th>Costo extra</th><th>Mapa</th><th></th></tr></thead>
+          <tbody>
+          ${locations.map((l,i)=>`
+            <tr>
+              <td style="color:var(--text-muted);font-size:0.8rem">${i+1}</td>
+              <td><input type="text" value="${l.name}" onchange="updateLocationAPI('${l.id}','name',this.value)" style="border:1px solid var(--border);border-radius:6px;padding:0.3rem 0.6rem;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.83rem;width:100%"></td>
+              <td><input type="text" value="${l.address}" onchange="updateLocationAPI('${l.id}','address',this.value)" style="border:1px solid var(--border);border-radius:6px;padding:0.3rem 0.6rem;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.83rem;width:100%"></td>
+              <td><input type="number" value="${l.cost}" min="0" onchange="updateLocationAPI('${l.id}','cost',+this.value)" style="border:1px solid var(--border);border-radius:6px;padding:0.3rem 0.6rem;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.83rem;width:70px"> Bs</td>
+              <td>
+                <button class="action-btn" onclick="openMapPicker('${l.id}',${l.lat||'-16.5'},${l.lng||'-68.15'})">
+                  ${l.lat?'✓ Ver/editar':'+ Marcar'}
+                </button>
+              </td>
+              <td><button class="action-btn danger" onclick="deleteLocationAPI('${l.id}')">Eliminar</button></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        <div style="padding:0.85rem 1.25rem;font-size:0.78rem;color:var(--text-muted)">Los cambios se guardan automáticamente.</div>
+      </div>`;
+  });
+}
+
+function openMapPicker(locId, lat, lng){
+  document.getElementById('reserveModal').classList.add('open');
+  document.getElementById('modalStepper').style.display='none';
+  document.getElementById('modalFoot').style.display='flex';
+  document.getElementById('modalFoot').innerHTML=`
+    <button class="btn-secondary" onclick="closeModal();adminSection('locations',null)">Cancelar</button>
+    <button class="btn-primary" onclick="saveMapLocation('${locId}')">Guardar ubicación</button>
+  `;
+  document.getElementById('modalContent').innerHTML=`
+    <div class="modal-title">Marcar ubicación</div>
+    <div class="modal-sub">Haz clic en el mapa para marcar el punto exacto de entrega</div>
+    <div id="adminMapPick" class="map-pick-container"></div>
+    <p class="map-hint" id="mapCoords">${lat&&lat!=-16.5?'📍 Ubicación marcada: '+lat+', '+lng:'Haz clic en el mapa para marcar'}</p>
+  `;
+  setTimeout(()=>{
+    const initLat = (lat && lat != -16.5) ? lat : -16.5;
+    const initLng = (lng && lng != -68.15) ? lng : -68.15;
+    delete L.Icon.Default.prototype._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    });
+    const map = L.map('adminMapPick').setView([initLat, initLng], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      attribution:'© OpenStreetMap'
+    }).addTo(map);
+    let marker = null;
+    if(lat && lat != -16.5){
+      marker = L.marker([lat, lng]).addTo(map);
+    }
+    map.on('click', function(e){
+      const {lat:la, lng:ln} = e.latlng;
+      if(marker) map.removeLayer(marker);
+      marker = L.marker([la, ln]).addTo(map);
+      window._pickedLat = la;
+      window._pickedLng = ln;
+      document.getElementById('mapCoords').textContent = '📍 Ubicación marcada: '+la.toFixed(5)+', '+ln.toFixed(5);
+    });
+    window._pickedLat = (lat && parseFloat(lat) != -16.5) ? parseFloat(lat) : null;
+    window._pickedLng = (lng && parseFloat(lng) != -68.15) ? parseFloat(lng) : null;
+    window._currentLocId = locId;
+  }, 100);
+}
+
+function saveMapLocation(locId){
+  if(!window._pickedLat){showToast('Haz clic en el mapa primero','error');return;}
+  fetch(`${API}/api/locations`).then(r=>r.json()).then(locations=>{
+    const l = locations.find(l=>l.id===locId);
+    if(!l) return;
+    l.lat = parseFloat(window._pickedLat);
+    l.lng = parseFloat(window._pickedLng);
+    fetch(`${API}/api/locations/${locId}`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},
+      body:JSON.stringify(l)
+    })
+    .then(r=>r.json())
+    .then(data=>{
+      closeModal();
+      renderAdminLocations(document.getElementById('adminContent'));
+      showToast('Ubicación guardada ✓');
+    })
+    .catch(()=>showToast('Error al guardar','error'));
+  });
+}
+
+// Admin API calls
+function confirmReservationAPI(id){
+  fetch(`${API}/api/reservations/${id}/confirm`,{method:'PUT',headers:{'X-Admin-Key':ADMIN_KEY}})
+    .then(()=>{renderAdminReservations(document.getElementById('adminContent'));showToast('Reserva confirmada');});
+}
+function deleteReservationAPI(id){
+  if(!confirm('¿Eliminar esta reserva?')) return;
+  fetch(`${API}/api/reservations/${id}`,{method:'DELETE',headers:{'X-Admin-Key':ADMIN_KEY}})
+    .then(()=>{renderAdminReservations(document.getElementById('adminContent'));showToast('Reserva eliminada');});
+}
+function addLocationAPI(){
+  fetch(`${API}/api/locations`,{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},body:JSON.stringify({name:'Nuevo punto',address:'Agregar dirección',cost:0})})
+    .then(()=>renderAdminLocations(document.getElementById('adminContent')));
+}
+function updateLocationAPI(id,field,value){
+  fetch(`${API}/api/locations`).then(r=>r.json()).then(locations=>{
+    const l=locations.find(l=>l.id===id);
+    if(!l) return;
+    l[field]=value;
+    fetch(`${API}/api/locations/${id}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},body:JSON.stringify(l)});
+  });
+}
+function deleteLocationAPI(id){
+  if(!confirm('¿Eliminar este punto?')) return;
+  fetch(`${API}/api/locations/${id}`,{method:'DELETE',headers:{'X-Admin-Key':ADMIN_KEY}})
+    .then(()=>renderAdminLocations(document.getElementById('adminContent')));
+}
+
+function setInfiniteStock(id){
+  if(!confirm('¿Poner este producto en modo "Por encargo"? Se mostrará en la tienda pero los clientes no lo reservarán directamente, solo lo verán como referencia.')) return;
+  fetch(`${API}/api/products`,{headers:{'X-Admin-Key':ADMIN_KEY}})
+    .then(r=>r.json())
+    .then(products=>{
+      const p=products.find(p=>p.id===id);
+      if(!p) return;
+      fetch(`${API}/api/products/${id}`,{
+        method:'PUT',
+        headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},
+        body:JSON.stringify({...p,stock:-1,active:1,colors:typeof p.colors==='string'?p.colors:JSON.stringify(p.colors),image:typeof p.image==='string'?p.image:JSON.stringify(p.image)})
+      }).then(()=>{renderAdminProducts(document.getElementById('adminContent'));showToast('Producto en modo Por encargo ✓');});
+    });
+}
+
+function removeInfiniteStock(id){
+  const newStock=prompt('¿Cuántas unidades tienes disponibles ahora?','0');
+  if(newStock===null) return;
+  const qty=parseInt(newStock)||0;
+  fetch(`${API}/api/products`,{headers:{'X-Admin-Key':ADMIN_KEY}})
+    .then(r=>r.json())
+    .then(products=>{
+      const p=products.find(p=>p.id===id);
+      if(!p) return;
+      fetch(`${API}/api/products/${id}`,{
+        method:'PUT',
+        headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},
+        body:JSON.stringify({...p,stock:qty,active:1,colors:typeof p.colors==='string'?p.colors:JSON.stringify(p.colors),image:typeof p.image==='string'?p.image:JSON.stringify(p.image)})
+      }).then(()=>{renderAdminProducts(document.getElementById('adminContent'));showToast(`Stock actualizado a ${qty} unidades ✓`);});
+    });
+}
+
+function reactivateProductAPI(id){
+  if(!confirm('¿Volver a activar este producto en la tienda?')) return;
+  fetch(`${API}/api/products`,{headers:{'X-Admin-Key':ADMIN_KEY}})
+    .then(r=>r.json())
+    .then(products=>{
+      const p=products.find(p=>p.id===id);
+      if(!p) return;
+      fetch(`${API}/api/products/${id}`,{
+        method:'PUT',
+        headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},
+        body:JSON.stringify({...p, active:1, colors: typeof p.colors==='string'?p.colors:JSON.stringify(p.colors), image: typeof p.image==='string'?p.image:JSON.stringify(p.image)})
+      })
+      .then(()=>{renderAdminProducts(document.getElementById('adminContent'));showToast('Producto reactivado ✓');});
+    });
+}
+function deleteProductAPI(id, permanent=false){
+  const msg = permanent
+    ? '⚠️ ¿Eliminar DEFINITIVAMENTE? Esto no se puede deshacer.'
+    : '¿Ocultar este producto de la tienda?';
+  if(!confirm(msg)) return;
+  const url = permanent
+    ? `${API}/api/products/${id}?permanent=true`
+    : `${API}/api/products/${id}`;
+  fetch(url,{method:'DELETE',headers:{'X-Admin-Key':ADMIN_KEY}})
+    .then(()=>{renderAdminProducts(document.getElementById('adminContent'));showToast(permanent?'Producto eliminado definitivamente':'Producto ocultado');});
+}
+
+// Product form
+function openProductForm(productId){
+  if(productId){
+    fetch(`${API}/api/products`).then(r=>r.json()).then(products=>{
+      editingProduct=products.find(p=>p.id===productId)||null;
+      if(editingProduct){
+        editingProduct.colors=typeof editingProduct.colors==='string'?JSON.parse(editingProduct.colors||'[]'):(editingProduct.colors||[]);
+        try{existingImages=JSON.parse(editingProduct.image);if(!Array.isArray(existingImages))existingImages=existingImages?[existingImages]:[];}
+        catch{existingImages=editingProduct.image?[editingProduct.image]:[];}
+      }
+      newProductColors=editingProduct?[...editingProduct.colors]:[];
+      _openProductFormRender();
+    });
+    return;
+  }
+  editingProduct=null;newProductColors=[];existingImages=[];
+  _openProductFormRender();
+}
+
+function _openProductFormRender(){
+  const typeOptions=['frazada','cubrecama','sabana','cobertor'].map(t=>
+    `<option value="${t}" ${editingProduct?.type===t?'selected':''}>${t.charAt(0).toUpperCase()+t.slice(1)}</option>`
+  ).join('');
+  document.getElementById('modalStepper').style.display='none';
+  document.getElementById('modalFoot').style.display='flex';
+  document.getElementById('modalFoot').innerHTML=`
+    <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+    <button class="btn-primary" onclick="saveProductAPI()">${editingProduct?'Guardar cambios':'Crear producto'}</button>
+  `;
+  document.getElementById('modalContent').innerHTML=`
+    <div class="modal-title">${editingProduct?'Editar producto':'Nuevo producto'}</div>
+    <div class="form-row-2">
+      <div class="form-group"><label>Código *</label><input type="text" id="pCode" value="${editingProduct?.code||''}" placeholder="Ej: 2128A-LK"></div>
+      <div class="form-group"><label>Tipo *</label><select id="pType">${typeOptions}</select></div>
+    </div>
+    <div class="form-group"><label>Nombre / Colección *</label><input type="text" id="pName" value="${editingProduct?.name||''}" placeholder="Ej: Colección Otoño Invierno"></div>
+    <div class="form-row-2">
+      <div class="form-group"><label>Dimensiones</label><input type="text" id="pSize" value="${editingProduct?.size||''}" placeholder="Ej: 2 Plazas 210x230cm"></div>
+      <div class="form-group"><label>Precio (Bs) *</label><input type="number" id="pPrice" value="${editingProduct?.price||''}" min="1"></div>
+    </div>
+    <div class="form-group"><label>Stock *</label><input type="number" id="pStock" value="${editingProduct?.stock||''}" min="0"></div>
+    <div class="form-group"><label>Figura / Diseño</label><input type="text" id="pFigura" value="${editingProduct?.figura||''}" placeholder="Ej: Atigrada A, Líneas rectas..."></div>
+    <div class="form-group"><label>Descripción para el cliente</label><textarea id="pDesc" placeholder="Ej: Frazada con carnero de alta densidad, ideal para el frío paceño. Suave al tacto y lavable a máquina..." style="min-height:90px">${editingProduct?.description||''}</textarea></div>
+    <div class="form-group">
+      <label>Imágenes (máx. 10)</label>
+      <input type="file" id="pImageFile" accept="image/*" multiple onchange="previewImages(this)" style="width:100%;padding:0.5rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.8rem;background:#fff">
+      <div id="uploadStatus" style="font-size:0.76rem;color:var(--text-muted);margin-top:0.3rem"></div>
+      ${existingImages.length?`
+      <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem;margin-bottom:0.3rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em">Imágenes actuales</div>
+      <div id="existingImgList" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem">
+        ${existingImages.map((url,i)=>`
+          <div style="position:relative;width:72px;height:72px" id="eimg-${i}">
+            <img src="${url}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">
+            <button onclick="removeExistingImage(${i})" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--danger);color:#fff;border:none;cursor:pointer;font-size:0.7rem;display:flex;align-items:center;justify-content:center;font-weight:700">✕</button>
+          </div>`).join('')}
+      </div>`:''}
+      <div id="imagePreview" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem"></div>
+      <input type="hidden" id="pImage" value="${editingProduct ? JSON.stringify(existingImages).replace(/"/g, '&quot;') : ''}">
+    </div>
+    <div class="form-group">
+      <label>Colores disponibles</label>
+      <div class="color-list" id="colorList">${renderColorTags()}</div>
+      <div class="add-color-row">
+        <input type="color" id="newColorPicker" value="#2563EB">
+        <input type="text" id="newColorName" placeholder="Nombre del color" style="flex:1;padding:0.35rem 0.7rem;border:1px solid var(--border);border-radius:6px;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.83rem">
+        <button class="action-btn" onclick="addColor()">+ Agregar</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('reserveModal').classList.add('open');
+}
+
+function renderColorTags(){
+  return newProductColors.map((c,i)=>`
+    <div class="color-tag">
+      <div class="color-swatch" style="background:${c.hex}"></div>
+      ${c.name}
+      <button onclick="removeColor(${i})">✕</button>
+    </div>`).join('');
+}
+function addColor(){
+  const hex=document.getElementById('newColorPicker').value;
+  const name=document.getElementById('newColorName').value.trim()||COLOR_NAMES[hex]||'Color';
+  newProductColors.push({hex,name});
+  document.getElementById('colorList').innerHTML=renderColorTags();
+  document.getElementById('newColorName').value='';
+}
+function removeColor(i){newProductColors.splice(i,1);document.getElementById('colorList').innerHTML=renderColorTags();}
+
+function removeExistingImage(i){
+  existingImages.splice(i,1);
+  document.getElementById('pImage').value=JSON.stringify(existingImages);
+  const el=document.getElementById('eimg-'+i);
+  if(el) el.remove();
+  // re-numerar los botones restantes
+  const container=document.getElementById('existingImgList');
+  if(container){
+    Array.from(container.children).forEach((div,idx)=>{
+      div.id='eimg-'+idx;
+      const btn=div.querySelector('button');
+      if(btn) btn.setAttribute('onclick',`removeExistingImage(${idx})`);
+    });
+  }
+}
+
+async function saveProductAPI(){
+  const code=document.getElementById('pCode').value.trim();
+  const name=document.getElementById('pName').value.trim();
+  const type=document.getElementById('pType').value;
+  const size=document.getElementById('pSize').value.trim();
+  const price=parseFloat(document.getElementById('pPrice').value);
+  const stock=parseInt(document.getElementById('pStock').value);
+  if(!name||!price||isNaN(stock)){showToast('Completa los campos obligatorios','error');return;}
+  const image=await uploadImageToCloudinary();
+  if(image===null) return;
+  const figura=document.getElementById('pFigura').value.trim();
+  const description=document.getElementById('pDesc').value.trim();
+  const body={name,type,size,price,stock,image,code,figura,description,active:1,colors:JSON.stringify(newProductColors)};
+  const method=editingProduct?'PUT':'POST';
+  const url=editingProduct?`${API}/api/products/${editingProduct.id}`:`${API}/api/products`;
+  fetch(url,{method,headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},body:JSON.stringify(body)})
+    .then(r=>{if(!r.ok)return r.text().then(t=>{throw new Error(t)});return r.json();})
+    .then(()=>{closeModal();renderAdminProducts(document.getElementById('adminContent'));showToast(editingProduct?'Producto actualizado':'Producto creado');})
+    .catch(err=>{console.error('Error guardando:',err);showToast('Error del servidor: '+err.message,'error');});
+}
+
+function previewImages(input){
+  const files=Array.from(input.files).slice(0,10);
+  const preview=document.getElementById('imagePreview');
+  preview.innerHTML='';
+  files.forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const div=document.createElement('div');
+      div.style.cssText='width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--border)';
+      div.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+      preview.appendChild(div);
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('uploadStatus').textContent=`${files.length} foto${files.length>1?'s':''} seleccionada${files.length>1?'s':''}`;
+}
+
+async function uploadImageToCloudinary(){
+  const fileInput=document.getElementById('pImageFile');
+  const statusEl=document.getElementById('uploadStatus');
+  const existingValue=(document.getElementById('pImage')?.value||'').replace(/&quot;/g,'"');
+  let existing=[];
+  try{existing=JSON.parse(existingValue);if(!Array.isArray(existing))existing=existingValue?[existingValue]:[];}
+  catch{existing=existingImages||[];}
+  if(!fileInput?.files?.length) return JSON.stringify(existing);
+  const files=Array.from(fileInput.files).slice(0,10-existing.length);
+  if(!files.length){showToast('Ya tienes 10 fotos. Elimina alguna.','error');return JSON.stringify(existing);}
+  for(const file of files){if(file.size>5*1024*1024){showToast(`"${file.name}" supera 5MB.`,'error');return null;}}
+  statusEl.textContent=`Subiendo ${files.length} foto${files.length>1?'s':''}...`;
+  const newUrls=[];
+  for(let i=0;i<files.length;i++){
+    statusEl.textContent=`Subiendo foto ${i+1} de ${files.length}...`;
+    const formData=new FormData();
+    formData.append('file',files[i]);
+    try{
+      const res=await fetch(`${API}/api/upload`,{method:'POST',body:formData});
+      const data=await res.json();
+      if(data.ok) newUrls.push(data.url);
+      else{showToast(`Error subiendo foto ${i+1}.`,'error');return null;}
+    }catch{showToast('Error de conexión.','error');return null;}
+  }
+  statusEl.textContent=`✓ ${newUrls.length} foto${newUrls.length>1?'s':''} subida${newUrls.length>1?'s':''}`;
+  return JSON.stringify([...existing,...newUrls]);
+}
+
+// ===== CATALOG & FLYER =====
+let _catalogFilter = 'all';
+let _catalogProducts = [];
+
+function openCatalogModal(filter){
+  _catalogFilter = filter;
+  const titles = {all:'Catálogo Completo',frazada:'Catálogo Frazadas',cubrecama:'Catálogo Cubrecamas',sabana:'Catálogo Sábanas',cobertor:'Catálogo Cobertores'};
+  const labels = {all:'Todos los productos',frazada:'Solo Frazadas',cubrecama:'Solo Cubrecamas',sabana:'Solo Sábanas',cobertor:'Solo Cobertores'};
+  document.getElementById('catalogModalTitle').textContent = titles[filter] || 'Catálogo';
+  document.getElementById('catalogModalDesc').textContent = `Se generará un PDF con ${labels[filter]||'productos seleccionados'} activos del catálogo.`;
+  document.getElementById('catalogProgress').style.display = 'none';
+  document.getElementById('catalogOptions').style.display = 'grid';
+  document.getElementById('catalogGenerateBtn').style.display = 'flex';
+  document.getElementById('catalogProgressFill').style.width = '0%';
+
+  fetch(`${API}/api/products`)
+    .then(r=>r.json())
+    .then(products=>{
+      _catalogProducts = products.filter(p=>(p.active===1||p.active===true)&&(filter==='all'||p.type===filter));
+      const opts = document.getElementById('catalogOptions');
+      opts.innerHTML = `
+        <div class="catalog-option" style="cursor:default;background:var(--teal-ultra);border-color:var(--teal-pale)">
+          <span style="font-size:1.2rem">📦</span>
+          <div>
+            <div>${_catalogProducts.length} producto${_catalogProducts.length!==1?'s':''} encontrado${_catalogProducts.length!==1?'s':''}</div>
+            <div style="font-size:0.76rem;color:var(--text-muted);font-weight:400;margin-top:0.15rem">Se incluirán todos con sus fotos, precios y colores</div>
+          </div>
+        </div>
+        <div class="catalog-option" style="cursor:default;background:#fff">
+          <span style="font-size:1.2rem">🎨</span>
+          <div>
+            <div>Diseño profesional con branding DreamBed</div>
+            <div style="font-size:0.76rem;color:var(--text-muted);font-weight:400;margin-top:0.15rem">Logo, WhatsApp y colores de marca incluidos</div>
+          </div>
+        </div>
+      `;
+    })
+    .catch(()=>{ _catalogProducts=[]; });
+
+  document.getElementById('catalogOverlay').classList.add('open');
+}
+
+function closeCatalogModal(){
+  document.getElementById('catalogOverlay').classList.remove('open');
+}
+
+async function startCatalogGeneration(){
+  if(!_catalogProducts.length){ showToast('No hay productos para generar','error'); return; }
+  document.getElementById('catalogOptions').style.display = 'none';
+  document.getElementById('catalogGenerateBtn').style.display = 'none';
+  const prog = document.getElementById('catalogProgress');
+  const fill = document.getElementById('catalogProgressFill');
+  const txt = document.getElementById('catalogProgressText');
+  prog.style.display = 'flex';
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pageW = 210, pageH = 297;
+  const margin = 12;
+  const colW = (pageW - margin*2 - 6) / 2;
+  const cardH = 100;
+  const typeLabels = {frazada:'Frazada',cubrecama:'Cubrecama',sabana:'Sábana',cobertor:'Cobertor'};
+  const filterTitles = {all:'Catálogo Completo',frazada:'Frazadas',cubrecama:'Cubrecamas',sabana:'Sábanas',cobertor:'Cobertores'};
+
+  // ---- PORTADA ----
+  txt.textContent = 'Diseñando portada...';
+  fill.style.width = '5%';
+
+  // Fondo portada
+  doc.setFillColor(13, 92, 84);
+  doc.rect(0, 0, pageW, pageH, 'F');
+
+  // Franja decorativa inferior
+  doc.setFillColor(212, 130, 42);
+  doc.rect(0, pageH - 28, pageW, 28, 'F');
+
+  // Logo / nombre
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(38);
+  doc.setTextColor(240, 169, 75);
+  doc.text('DreamBed', pageW/2, 90, {align:'center'});
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(22);
+  doc.setTextColor(255,255,255);
+  doc.text('Bolivia', pageW/2, 104, {align:'center'});
+
+  // Línea decorativa
+  doc.setDrawColor(212,130,42);
+  doc.setLineWidth(0.8);
+  doc.line(margin+20, 112, pageW-margin-20, 112);
+
+  // Título catálogo
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(18);
+  doc.setTextColor(255,255,255);
+  doc.text(filterTitles[_catalogFilter] || 'Catálogo', pageW/2, 128, {align:'center'});
+
+  // Año
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(11);
+  doc.setTextColor(200,230,225);
+  doc.text(new Date().getFullYear().toString(), pageW/2, 140, {align:'center'});
+
+  // Descripción
+  doc.setFontSize(10);
+  doc.setTextColor(180,220,215);
+  doc.text('Distribuidores Oficiales Goldsun en Bolivia', pageW/2, 155, {align:'center'});
+  doc.text('Calidad premium · Stock garantizado · Reserva online', pageW/2, 163, {align:'center'});
+
+  // Footer portada
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(11);
+  doc.setTextColor(255,255,255);
+  doc.text('WhatsApp: +591 758 44 279', pageW/2, pageH-14, {align:'center'});
+
+  // Cantidad de productos
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  doc.setTextColor(240,169,75);
+  doc.text(`${_catalogProducts.length} productos disponibles`, pageW/2, pageH-7, {align:'center'});
+
+  // ---- PÁGINAS DE PRODUCTOS ----
+  doc.addPage();
+  let posX = margin, posY = 18, col = 0;
+
+  // Encabezado de página
+  const drawPageHeader = () => {
+    doc.setFillColor(13,92,84);
+    doc.rect(0,0,pageW,13,'F');
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(8);
+    doc.setTextColor(255,255,255);
+    doc.text('DreamBed Bolivia  ·  ' + (filterTitles[_catalogFilter]||'Catálogo'), margin, 8.5);
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(212,130,42);
+    doc.text('+591 758 44 279', pageW-margin, 8.5, {align:'right'});
+  };
+  drawPageHeader();
+
+  for(let i=0; i<_catalogProducts.length; i++){
+    const p = _catalogProducts[i];
+    const pct = Math.round(((i+1)/_catalogProducts.length)*90)+5;
+    fill.style.width = pct+'%';
+    txt.textContent = `Procesando ${i+1} de ${_catalogProducts.length}: ${p.name}`;
+    await new Promise(r=>setTimeout(r,0));
+
+    // nueva fila
+    if(col===2){ col=0; posX=margin; posY+=cardH+6; }
+
+    // nueva página
+    if(posY+cardH > pageH-20){
+      doc.addPage();
+      posY=18;
+      posX=margin;
+      col=0;
+      drawPageHeader();
+    }
+
+    const cx=posX, cy=posY;
+
+    // Sombra suave
+    doc.setFillColor(220,230,228);
+    doc.roundedRect(cx+1.5, cy+1.5, colW, cardH, 4, 4, 'F');
+
+    // Fondo card
+    doc.setFillColor(254,252,249);
+    doc.roundedRect(cx, cy, colW, cardH, 4, 4, 'F');
+
+    // Franja header card
+    doc.setFillColor(13,92,84);
+    doc.roundedRect(cx, cy, colW, 14, 4, 4, 'F');
+    doc.rect(cx, cy+8, colW, 6, 'F');
+
+    // Tipo y código
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(7);
+    doc.setTextColor(240,169,75);
+    doc.text((typeLabels[p.type]||p.type).toUpperCase(), cx+4, cy+6);
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(200,230,225);
+    doc.text(p.code||'', cx+colW-4, cy+6, {align:'right'});
+
+    // Imagen del producto
+    let imgLoaded = false;
+    const imgAreaX = cx+4, imgAreaY = cy+16, imgAreaW = colW-8, imgAreaH = 38;
+    try {
+      let imgs = [];
+      try{ imgs=JSON.parse(p.image||'[]'); if(!Array.isArray(imgs)) imgs=p.image?[p.image]:[]; }catch{ imgs=p.image?[p.image]:[]; }
+      if(imgs.length){
+        const imgData = await loadImageAsBase64(imgs[0]);
+        if(imgData){
+          // Fondo imagen
+          doc.setFillColor(240,250,249);
+          doc.rect(imgAreaX, imgAreaY, imgAreaW, imgAreaH, 'F');
+          doc.addImage(imgData, 'JPEG', imgAreaX, imgAreaY, imgAreaW, imgAreaH, '', 'FAST');
+          imgLoaded = true;
+        }
+      }
+    } catch(e){}
+    if(!imgLoaded){
+      doc.setFillColor(224,244,242);
+      doc.rect(imgAreaX, imgAreaY, imgAreaW, imgAreaH, 'F');
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(20);
+      doc.setTextColor(13,92,84);
+      doc.text('🛏', cx+colW/2, cy+38, {align:'center'});
+    }
+
+    // Nombre
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(26,26,26);
+    const nameLines = doc.splitTextToSize(p.name, colW-8);
+    doc.text(nameLines.slice(0,2), cx+4, cy+60);
+
+    // Tamaño
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(7);
+    doc.setTextColor(107,117,117);
+    doc.text(p.size||'', cx+4, cy+68);
+
+    // Colores
+    const colors = typeof p.colors==='string'?JSON.parse(p.colors||'[]'):(p.colors||[]);
+    let dotX = cx+4;
+    doc.setFontSize(6.5);
+    doc.setTextColor(107,117,117);
+    doc.text('Colores:', dotX, cy+75);
+    dotX += 14;
+    colors.slice(0,8).forEach(c=>{
+      const hex = c.hex||c;
+      const r=parseInt(hex.slice(1,3),16)||150;
+      const g=parseInt(hex.slice(3,5),16)||150;
+      const b=parseInt(hex.slice(5,7),16)||150;
+      doc.setFillColor(r,g,b);
+      doc.circle(dotX+2, cy+73.5, 2.5, 'F');
+      dotX+=7;
+    });
+    if(colors.length>8){
+      doc.setFontSize(6);
+      doc.setTextColor(107,117,117);
+      doc.text(`+${colors.length-8}`, dotX+1, cy+75);
+    }
+
+    // Precio
+    doc.setFillColor(13,92,84);
+    doc.roundedRect(cx+4, cy+78, colW-8, 10, 2, 2, 'F');
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(10);
+    doc.setTextColor(255,255,255);
+    doc.text(`Bs ${p.price}`, cx+colW/2, cy+85, {align:'center'});
+
+    // Stock badge
+    const stockTxt = p.stock===-1?'Por encargo':p.stock<=0?'Sin stock':p.stock<=3?`Últimos ${p.stock}`:'Disponible';
+    const stockColor = p.stock===-1?[100,60,180]:p.stock<=0?[139,34,32]:p.stock<=3?[180,100,20]:[13,92,84];
+    doc.setFillColor(...stockColor);
+    doc.roundedRect(cx+colW-28, cy+16, 26, 6, 2, 2, 'F');
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(5.5);
+    doc.setTextColor(255,255,255);
+    doc.text(stockTxt, cx+colW-15, cy+20, {align:'center'});
+
+    posX += colW+6;
+    col++;
+  }
+
+  // ---- PÁGINA FINAL ----
+  doc.addPage();
+  doc.setFillColor(13,92,84);
+  doc.rect(0,0,pageW,pageH,'F');
+  doc.setFillColor(212,130,42);
+  doc.rect(0,pageH-18,pageW,18,'F');
+
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(22);
+  doc.setTextColor(240,169,75);
+  doc.text('DreamBed Bolivia', pageW/2, 100, {align:'center'});
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(12);
+  doc.setTextColor(200,230,225);
+  doc.text('Distribuidores Oficiales Goldsun', pageW/2, 115, {align:'center'});
+  doc.setDrawColor(212,130,42);
+  doc.setLineWidth(0.6);
+  doc.line(margin+30, 122, pageW-margin-30, 122);
+  doc.setFontSize(11);
+  doc.setTextColor(255,255,255);
+  doc.text('📞 WhatsApp: +591 758 44 279', pageW/2, 138, {align:'center'});
+  doc.setFontSize(10);
+  doc.setTextColor(200,230,225);
+  doc.text('dream-bed.netlify.app', pageW/2, 150, {align:'center'});
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(9);
+  doc.setTextColor(255,255,255);
+  doc.text('Reserva online · Recoge en tu punto más cercano', pageW/2, 167, {align:'center'});
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(8);
+  doc.setTextColor(255,255,255);
+  doc.text('Múltiples puntos en La Paz · Atención Lun-Vie 8:00-18:00 · Sáb 8:00-14:00', pageW/2, pageH-8, {align:'center'});
+
+  fill.style.width = '100%';
+  txt.textContent = '✓ Generando PDF...';
+  await new Promise(r=>setTimeout(r,200));
+
+  const filterName = {all:'completo',frazada:'frazadas',cubrecama:'cubrecamas',sabana:'sabanas',cobertor:'cobertores'};
+  doc.save(`DreamBed-Catalogo-${filterName[_catalogFilter]||'catalogo'}-${new Date().toISOString().split('T')[0]}.pdf`);
+
+  showToast('✓ Catálogo PDF descargado');
+  closeCatalogModal();
+}
+
+async function generateFlyer(productId){
+  const products = await fetch(`${API}/api/products`).then(r=>r.json());
+  const p = products.find(x=>x.id===productId);
+  if(!p){ showToast('Producto no encontrado','error'); return; }
+
+  const colors = typeof p.colors==='string'?JSON.parse(p.colors||'[]'):(p.colors||[]);
+  let imgs = [];
+  try{ imgs=JSON.parse(p.image||'[]'); if(!Array.isArray(imgs)) imgs=p.image?[p.image]:[]; }catch{ imgs=p.image?[p.image]:[]; }
+
+  showToast('⏳ Generando flyer...');
+  const { jsPDF } = window.jspdf;
+
+  // Flyer cuadrado 150x150mm (ideal Instagram/Facebook)
+  const doc = new jsPDF({orientation:'portrait', unit:'mm', format:[150,150]});
+  const W=150, H=150;
+
+  // Fondo degradado simulado
+  doc.setFillColor(13,92,84);
+  doc.rect(0,0,W,H,'F');
+  doc.setFillColor(20,122,111);
+  doc.rect(0,H*0.45,W,H*0.55,'F');
+
+  // Imagen del producto (zona central)
+  const imgZoneX=10, imgZoneY=22, imgZoneW=W-20, imgZoneH=68;
+  doc.setFillColor(240,250,249);
+  doc.roundedRect(imgZoneX,imgZoneY,imgZoneW,imgZoneH,6,6,'F');
+
+  if(imgs.length){
+    try{
+      const imgData = await loadImageAsBase64(imgs[0]);
+      if(imgData) doc.addImage(imgData,'JPEG',imgZoneX,imgZoneY,imgZoneW,imgZoneH,'','FAST');
+    }catch(e){}
+  }
+
+  // Header con logo
+  doc.setFillColor(0,0,0,0);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(11);
+  doc.setTextColor(240,169,75);
+  doc.text('DreamBed', 10, 12);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(8);
+  doc.setTextColor(255,255,255);
+  doc.text('Bolivia', 10, 18);
+
+  // Badge tipo
+  const typeLabels={frazada:'Frazada',cubrecama:'Cubrecama',sabana:'Sábana',cobertor:'Cobertor'};
+  doc.setFillColor(212,130,42);
+  doc.roundedRect(W-45,8,38,10,3,3,'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(7);
+  doc.setTextColor(255,255,255);
+  doc.text((typeLabels[p.type]||p.type).toUpperCase(), W-26, 14.5, {align:'center'});
+
+  // Nombre producto
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(13);
+  doc.setTextColor(255,255,255);
+  const nameLines = doc.splitTextToSize(p.name, W-20);
+  doc.text(nameLines.slice(0,2), 10, 102);
+
+  // Código y tamaño
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(200,230,225);
+  doc.text(`Código: ${p.code||'-'}  ·  ${p.size||''}`, 10, 112);
+
+  // Colores disponibles
+  doc.setFontSize(7);
+  doc.setTextColor(200,230,225);
+  doc.text('Colores disponibles:', 10, 120);
+  let dotX=10;
+  colors.slice(0,10).forEach(c=>{
+    const hex=c.hex||c;
+    const r=parseInt(hex.slice(1,3),16)||150;
+    const g=parseInt(hex.slice(3,5),16)||150;
+    const b=parseInt(hex.slice(5,7),16)||150;
+    doc.setFillColor(r,g,b);
+    doc.setDrawColor(255,255,255);
+    doc.setLineWidth(0.4);
+    doc.circle(dotX+3,125,3,'FD');
+    dotX+=8;
+  });
+  if(colors.length>10){
+    doc.setFontSize(6.5);
+    doc.setTextColor(200,230,225);
+    doc.text(`+${colors.length-10} más`, dotX+2, 126.5);
+  }
+
+  // Precio destacado
+  doc.setFillColor(240,169,75);
+  doc.roundedRect(W-55,95,48,22,4,4,'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(9);
+  doc.setTextColor(13,92,84);
+  doc.text('PRECIO', W-31, 104, {align:'center'});
+  doc.setFontSize(15);
+  doc.text(`Bs ${p.price}`, W-31, 114, {align:'center'});
+
+  // Franja inferior WhatsApp
+  doc.setFillColor(37,211,102);
+  doc.rect(0,133,W,17,'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(9);
+  doc.setTextColor(255,255,255);
+  doc.text('💬 WhatsApp: +591 758 44 279', W/2, 140, {align:'center'});
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7.5);
+  doc.text('Reserva online · dream-bed.netlify.app', W/2, 147, {align:'center'});
+
+  doc.save(`DreamBed-Flyer-${p.code||p.name}-${new Date().toISOString().split('T')[0]}.pdf`);
+  showToast('✓ Flyer descargado');
+}
+
+async function loadImageAsBase64(url){
+  return new Promise((resolve)=>{
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = ()=>{
+      try{
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img,0,0);
+        resolve(canvas.toDataURL('image/jpeg',0.85));
+      }catch(e){ resolve(null); }
+    };
+    img.onerror = ()=>resolve(null);
+    // Intentar con proxy si falla CORS
+    img.src = url;
+    setTimeout(()=>{ if(!img.complete) resolve(null); }, 8000);
+  });
+}
+
+function exportData(){
+  const data={products:getDB('products',[]),reservations:getDB('reservations',[]),locations:getDB('locations',[]),exportedAt:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`dreambed-backup-${new Date().toISOString().split('T')[0]}.json`;a.click();
+  showToast('Datos exportados');
+}
+
+// ===== TOAST =====
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast'+(type?' '+type:'');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ===== CONTACT =====
+function renderContactLocations(){
+  fetch(`${API}/api/locations`).then(r=>r.json()).then(locations=>{
+    const el=document.getElementById('contactLocations');
+    if(el) el.innerHTML=locations.map(l=>`
+      <div style="padding:0.65rem 0;border-bottom:1px solid var(--border)">
+        <div style="font-weight:600;font-size:0.87rem">${l.name}</div>
+        <div style="font-size:0.78rem;color:var(--text-muted)">${l.address}${l.cost>0?' · +Bs '+l.cost:''}</div>
+      </div>`).join('');
+  });
+  const wa=document.getElementById('contactWaBtn');
+  if(wa) wa.href=`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent('Hola! Quisiera consultar sobre sus productos DreamBed Bolivia 🛏️')}`;
+  const fw=document.getElementById('footerWa');
+  if(fw) fw.href=`https://wa.me/${WA_NUMBER}`;
+}
+
+// ===== PROMO =====
+function loadPromoBanner(){
+  const promo=getDB('promo',null);
+  const banner=document.getElementById('promoBanner');
+  const text=document.getElementById('promoText');
+  if(promo&&promo.active&&promo.text&&banner&&text){text.textContent=promo.text;banner.style.display='';}
+}
+
+if(window.location.search.includes('admin')) setTimeout(()=>openAdmin(),300);
+
+// ===== FILTER SCROLL HINT =====
+document.addEventListener('DOMContentLoaded', () => {
+  const inner = document.getElementById('filterScrollWrap');
+  const hint = document.getElementById('filterHint');
+  if (!inner || !hint) return;
+  const scroll = inner.querySelector('.filter-scroll-inner');
+  if (!scroll) return;
+  scroll.addEventListener('scroll', () => {
+    const atEnd = scroll.scrollLeft + scroll.clientWidth >= scroll.scrollWidth - 10;
+    hint.style.opacity = atEnd ? '0' : '1';
+  });
+});
+
+// ===== FAVORITOS =====
+function renderFavorites(){
+  const saved = getDB('saved_products', []);
+  const empty = document.getElementById('favoritesEmpty');
+  const grid = document.getElementById('favoritesGrid');
+  if(!saved.length){
+    grid.innerHTML='';
+    empty.style.display='block';
+    return;
+  }
+  empty.style.display='none';
+  grid.innerHTML='<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.5rem">Cargando...</p>';
+  fetch(`${API}/api/products`)
+    .then(r=>r.json())
+    .then(products=>{
+      const favs = products.filter(p=>saved.includes(p.id)&&(p.active===1||p.active===true));
+      if(!favs.length){
+        grid.innerHTML='';
+        empty.style.display='block';
+        return;
+      }
+      const typeLabels={frazada:'Frazada',cubrecama:'Cubrecama',sabana:'Sábana',cobertor:'Cobertor'};
+      grid.innerHTML = favs.map(p=>{
+        let imgUrl='';
+        try{
+          const imgs=JSON.parse(p.image||'[]');
+          imgUrl=Array.isArray(imgs)?imgs[0]:p.image;
+        }catch{ imgUrl=p.image||''; }
+        return `
+        <div style="background:var(--warm-white);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;cursor:pointer;transition:all var(--transition)"
+          onmouseover="this.style.boxShadow='var(--shadow-md)';this.style.transform='translateY(-2px)'"
+          onmouseout="this.style.boxShadow='';this.style.transform=''"
+          onclick="openProductDetail('${p.id}')">
+          <div style="width:100%;aspect-ratio:4/3;background:var(--teal-ultra);overflow:hidden">
+            ${imgUrl?`<img src="${imgUrl}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover">`:
+            `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem">🛏️</div>`}
+          </div>
+          <div style="padding:0.85rem 1rem">
+            <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--teal-light);font-weight:600;margin-bottom:0.2rem">${typeLabels[p.type]||p.type}</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:600;margin-bottom:0.4rem">${p.name}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.65rem">${p.size||''}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700;color:var(--teal)">Bs ${p.price}</div>
+              <button onclick="event.stopPropagation();removeFavorite('${p.id}')"
+                style="font-size:0.72rem;padding:0.28rem 0.65rem;border:1.5px solid var(--danger);border-radius:20px;background:#fff;color:var(--danger);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;transition:all 0.2s"
+                onmouseover="this.style.background='var(--danger-bg)'"
+                onmouseout="this.style.background='#fff'">
+                ✕ Quitar
+              </button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    })
+    .catch(()=>{ grid.innerHTML='<p style="color:var(--text-muted);font-size:0.85rem">Error al cargar favoritos.</p>'; });
+}
+
+function removeFavorite(id){
+  let saved = getDB('saved_products', []);
+  saved = saved.filter(s=>s!==id);
+  setDB('saved_products', saved);
+  // sincronizar botón en grid si está visible
+  const btn = document.getElementById('save-'+id);
+  if(btn){ btn.textContent='♡ Guardar'; btn.classList.remove('saved'); }
+  renderFavorites();
+  showToast('Eliminado de favoritos');
+}
+
+// ===== GUARDAR / COMPARTIR =====
+function toggleSaveProduct(id, name){
+  let saved = getDB('saved_products', []);
+  const idx = saved.indexOf(id);
+  const btn = document.getElementById('save-'+id);
+  if(idx === -1){
+    saved.push(id);
+    if(btn){ btn.textContent = '♥ Guardado'; btn.classList.add('saved'); }
+    showToast('♥ Guardado en favoritos');
+  } else {
+    saved.splice(idx, 1);
+    if(btn){ btn.textContent = '♡ Guardar'; btn.classList.remove('saved'); }
+    showToast('Eliminado de favoritos');
+  }
+  setDB('saved_products', saved);
+}
+
+function toggleSaveProductDetail(){
+  if(!selectedProduct) return;
+  toggleSaveProduct(selectedProduct.id, selectedProduct.name);
+  // Sincronizar estado del botón en detalle
+  const saved = getDB('saved_products', []);
+  const btn = document.getElementById('detailSaveBtn');
+  if(btn){
+    if(saved.includes(selectedProduct.id)){
+      btn.textContent = '♥ Guardado';
+      btn.classList.add('saved');
+    } else {
+      btn.textContent = '♡ Guardar';
+      btn.classList.remove('saved');
+    }
+  }
+}
+
+function shareProduct(id, name){
+  const url = window.location.origin + window.location.pathname + '?producto=' + id;
+  if(navigator.share){
+    navigator.share({ title: name + ' — DreamBed Bolivia', text: '¡Mira este producto en DreamBed Bolivia! 🛏️', url: url })
+      .catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(url).then(()=>{
+      showToast('🔗 Enlace copiado al portapapeles');
+    }).catch(()=>{
+      showToast('Comparte este enlace: ' + url);
+    });
+  }
+}
+
+// ===== LEER ENLACE DE PRODUCTO =====
+(function(){
+  const params = new URLSearchParams(window.location.search);
+  const productoId = params.get('producto');
+  if(productoId){
+    setTimeout(()=>openProductDetail(productoId), 800);
+  }
+})();
+
+
+// Init
+renderProducts();
+renderContactLocations();
+loadPromoBanner();
+</script>
+</body>
+</html>
