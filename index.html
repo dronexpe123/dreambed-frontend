@@ -3607,15 +3607,7 @@ async function startCatalogGeneration(){
     doc.setTextColor(255,255,255);
     doc.text(`Bs ${p.price}`, cx+colW/2, cy+85, {align:'center'});
 
-    // Stock badge
-    const stockTxt = p.stock===-1?'Por encargo':p.stock<=0?'Sin stock':p.stock<=3?`Últimos ${p.stock}`:'Disponible';
-    const stockColor = p.stock===-1?[100,60,180]:p.stock<=0?[139,34,32]:p.stock<=3?[180,100,20]:[13,92,84];
-    doc.setFillColor(...stockColor);
-    doc.roundedRect(cx+colW-28, cy+16, 26, 6, 2, 2, 'F');
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(5.5);
-    doc.setTextColor(255,255,255);
-    doc.text(stockTxt, cx+colW-15, cy+20, {align:'center'});
+    
 
     posX += colW+6;
     col++;
