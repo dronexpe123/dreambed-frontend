@@ -2047,11 +2047,7 @@ function showView(v){
 
 // ===== PRODUCTS =====
 function getStockBadge(stock){
-  if(stock===-1) return '<span class="stock-badge badge-infinite">✦ Por encargo</span>';
-  if(stock<=0) return '<span class="stock-badge badge-out">Sin stock</span>';
-  if(stock===1) return '<span class="stock-badge badge-low">¡Último!</span>';
-  if(stock<=3) return `<span class="stock-badge badge-low">Últimos ${stock}</span>`;
-  return '<span class="stock-badge badge-ok">Disponible</span>';
+  return '';
 }
 
 function renderProducts(){
@@ -2224,9 +2220,8 @@ function _renderGrid(products){
         <div class="card-footer">
           <div class="card-price">Bs ${p.price} <small>/unid.</small></div>
           <button class="btn-add ${inCart?'in-cart':''}" 
-    ${p.stock<=0&&p.stock!==-1?'disabled':''} 
     onclick="addToCart('${p.id}');event.stopPropagation()">
-    ${p.stock<=0&&p.stock!==-1?'Agotado':inCart?'✓ En carrito':'+ Agregar'}
+    ${inCart?'✓ En carrito':'+ Agregar'}
           </button>
         </div>
       </div>
@@ -2314,14 +2309,12 @@ function _renderDetailView(p){
     ${p.description?`<div style="font-size:0.88rem;line-height:1.75;color:var(--text-muted);padding:0.5rem 0 0.85rem;border-bottom:1px solid var(--teal-pale);margin-bottom:0.5rem">${p.description}</div>`:''}
     <div class="spec-row"><span>Tipo</span><span>${typeLabels[p.type]||p.type}</span></div>
     <div class="spec-row"><span>Dimensiones</span><span>${p.size}</span></div>
-    <div class="spec-row"><span>Stock disponible</span><span>${p.stock===-1?'Por encargo':p.stock>0?p.stock+' uds.':'Sin stock'}</span></div>
     <div class="spec-row"><span>Código</span><span>${p.code}</span></div>
   `;
 
   const btn=document.getElementById('detailBtnAdd');
   const inCart=cart.find(i=>i.id===p.id);
-  if(p.stock<=0&&p.stock!==-1){btn.textContent='Sin stock';btn.disabled=true;}
-  else if(inCart){btn.textContent='✓ Ya está en el carrito';btn.disabled=true;}
+  if(inCart){btn.textContent='✓ Ya está en el carrito';btn.disabled=true;}
   else{btn.textContent='+ Agregar al carrito';btn.disabled=false;}
 
   document.getElementById('detailCartCount').textContent=cart.length;
@@ -2381,10 +2374,9 @@ function addToCart(productId){
       const product=products.find(p=>p.id===productId);
       if(!product) return;
       if(cart.find(i=>i.id===productId)){showToast('Ya está en tu carrito');return;}
-      if(product.stock<=0){showToast('Sin stock disponible');return;}
       const colors=typeof product.colors==='string'?JSON.parse(product.colors||'[]'):(product.colors||[]);
       cart.push({id:product.id,name:product.name,type:product.type,size:product.size,
-        price:product.price,color:colors[0]||'',colors:colors,quantity:1,maxStock:product.stock,image:product.image||''});
+        price:product.price,color:colors[0]||'',colors:colors,quantity:1,image:product.image||''});
       updateCartBadge();
       showToast('✓ Producto agregado al carrito');
       renderProducts();
@@ -2421,7 +2413,6 @@ function changeQty(id,delta){
   if(!item) return;
   const nq=item.quantity+delta;
   if(nq<1){removeFromCart(id);return;}
-  if(nq>item.maxStock){showToast(`Solo hay ${item.maxStock} disponibles`);return;}
   item.quantity=nq;
   updateCartBadge();
   renderCart();
@@ -2462,7 +2453,6 @@ function renderCart(){
           <button class="qty-btn" onclick="changeQty('${item.id}',-1)">−</button>
           <span class="qty-num">${item.quantity}</span>
           <button class="qty-btn" onclick="changeQty('${item.id}',1)">+</button>
-          <span style="font-size:0.7rem;color:var(--text-muted);margin-left:2px">(máx.${item.maxStock})</span>
         </div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem">
@@ -3254,7 +3244,6 @@ function _openProductFormRender(){
       <div class="form-group"><label>Dimensiones</label><input type="text" id="pSize" value="${editingProduct?.size||''}" placeholder="Ej: 2 Plazas 210x230cm"></div>
       <div class="form-group"><label>Precio (Bs) *</label><input type="number" id="pPrice" value="${editingProduct?.price||''}" min="1"></div>
     </div>
-    <div class="form-group"><label>Stock *</label><input type="number" id="pStock" value="${editingProduct?.stock||''}" min="0"></div>
     <div class="form-group"><label>Figura / Diseño</label><input type="text" id="pFigura" value="${editingProduct?.figura||''}" placeholder="Ej: Atigrada A, Líneas rectas..."></div>
     <div class="form-group"><label>Descripción para el cliente</label><textarea id="pDesc" placeholder="Ej: Frazada con carnero de alta densidad, ideal para el frío paceño. Suave al tacto y lavable a máquina..." style="min-height:90px">${editingProduct?.description||''}</textarea></div>
     <div class="form-group">
@@ -3325,13 +3314,12 @@ async function saveProductAPI(){
   const type=document.getElementById('pType').value;
   const size=document.getElementById('pSize').value.trim();
   const price=parseFloat(document.getElementById('pPrice').value);
-  const stock=parseInt(document.getElementById('pStock').value);
-  if(!name||!price||isNaN(stock)){showToast('Completa los campos obligatorios','error');return;}
+  if(!name||!price){showToast('Completa los campos obligatorios','error');return;}
   const image=await uploadImageToCloudinary();
   if(image===null) return;
   const figura=document.getElementById('pFigura').value.trim();
   const description=document.getElementById('pDesc').value.trim();
-  const body={name,type,size,price,stock,image,code,figura,description,active:1,colors:JSON.stringify(newProductColors)};
+  const body={name,type,size,price,stock:-1,image,code,figura,description,active:1,colors:JSON.stringify(newProductColors)};
   const method=editingProduct?'PUT':'POST';
   const url=editingProduct?`${API}/api/products/${editingProduct.id}`:`${API}/api/products`;
   fetch(url,{method,headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},body:JSON.stringify(body)})
