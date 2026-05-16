@@ -2408,16 +2408,6 @@ function removeFromCart(id){
   }
 }
 
-function changeQty(id,delta){
-  const item=cart.find(i=>i.id===id);
-  if(!item) return;
-  const nq=item.quantity+delta;
-  if(nq<1){removeFromCart(id);return;}
-  item.quantity=nq;
-  updateCartBadge();
-  renderCart();
-}
-
 function updateCartBadge(){
   const b=document.getElementById('cartBadge');
   if(cart.length>0){b.style.display='inline-flex';b.textContent=cart.length;}
@@ -2449,11 +2439,6 @@ function renderCart(){
       <div>
         <div class="cart-item-name">${item.name}</div>
         <div class="cart-item-meta">${item.size||''} · ${typeof item.color==='object'?item.color.name:'Sin color'}</div>
-        <div class="qty-control">
-          <button class="qty-btn" onclick="changeQty('${item.id}',-1)">−</button>
-          <span class="qty-num">${item.quantity}</span>
-          <button class="qty-btn" onclick="changeQty('${item.id}',1)">+</button>
-        </div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem">
         <button class="cart-item-remove" onclick="removeFromCart('${item.id}')">✕</button>
@@ -2870,7 +2855,6 @@ function renderDashboard(el){
       <div class="admin-header"><h2>Dashboard</h2><p>Resumen general del negocio</p></div>
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-label">Productos activos</div><div class="stat-value">${products.filter(p=>p.active).length}</div><div class="stat-sub">${products.length} total</div></div>
-        <div class="stat-card"><div class="stat-label">Stock total</div><div class="stat-value">${totalStock}</div><div class="stat-sub">unidades</div></div>
         <div class="stat-card"><div class="stat-label">Reservas activas</div><div class="stat-value" style="color:var(--amber)">${active.length}</div><div class="stat-sub">pendientes</div></div>
         <div class="stat-card"><div class="stat-label">Total reservas</div><div class="stat-value">${reservations.length}</div><div class="stat-sub">${expired.length} expiradas</div></div>
       </div>
@@ -2960,7 +2944,7 @@ function renderAdminProducts(el){
       </div>
       <div class="table-card">
         <table>
-          <thead><tr><th>Código</th><th>Nombre</th><th>Tipo</th><th>Precio</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <thead><tr><th>Código</th><th>Nombre</th><th>Tipo</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr></thead>
           <tbody>
           ${products.map(p=>`
             <tr>
@@ -2968,7 +2952,6 @@ function renderAdminProducts(el){
               <td>${p.name}<br><span style="font-size:0.73rem;color:var(--text-muted)">${p.size||''}</span></td>
               <td style="text-transform:capitalize">${p.type}</td>
               <td>Bs ${p.price}</td>
-              <td>${p.stock}</td>
               <td><span style="font-size:0.76rem;color:${p.active?'var(--success)':'var(--text-muted)'}">${p.active?'Activo':'Oculto'}</span></td>
               <td>
                 <button class="action-btn" onclick="openProductForm('${p.id}')">Editar</button>
